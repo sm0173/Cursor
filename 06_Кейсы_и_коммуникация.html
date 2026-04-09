@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Кейсы на собеседовании и коммуникация продакт-аналитика: структура ответа, вопросы стейкхолдерам, презентация выводов."
+    />
+    <title>06 — Кейсы и коммуникация</title>
+    <style>
+      :root {
+        --bg0: #0b1020;
+        --bg1: #0a1a2e;
+        --stroke: rgba(255, 255, 255, 0.14);
+        --muted: rgba(255, 255, 255, 0.72);
+        --muted2: rgba(255, 255, 255, 0.6);
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+        --radius: 22px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Arial, sans-serif;
+        color: rgba(255, 255, 255, 0.92);
+        background: radial-gradient(1100px 700px at 18% 12%, rgba(255, 111, 177, 0.28), transparent 60%),
+          radial-gradient(950px 650px at 82% 18%, rgba(255, 221, 133, 0.26), transparent 60%),
+          linear-gradient(160deg, var(--bg0), var(--bg1));
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .container {
+        width: min(820px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 44px 0 56px;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 26px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(255, 221, 133, 0.95), rgba(255, 111, 177, 0.86));
+        flex-shrink: 0;
+      }
+      .brand-title strong {
+        font-size: 14px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .brand-title span {
+        font-size: 14px;
+        color: var(--muted2);
+        margin-top: 4px;
+        display: block;
+      }
+      .nav {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .nav a {
+        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+      }
+      .nav a:hover {
+        background: rgba(255, 255, 255, 0.09);
+      }
+      .nav a:focus-visible {
+        outline: 2px solid rgba(255, 221, 133, 0.75);
+        outline-offset: 3px;
+      }
+      .hero {
+        border-radius: var(--radius);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.05));
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .hero-inner {
+        padding: 28px;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(24px, 3.5vw, 34px);
+        letter-spacing: -0.03em;
+      }
+      .lead {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.65;
+      }
+      .article {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.68;
+      }
+      .article h2 {
+        margin: 26px 0 10px;
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.86);
+      }
+      .article h3 {
+        margin: 18px 0 8px;
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .article p {
+        margin: 0 0 12px;
+      }
+      .article ul {
+        margin: 0 0 14px;
+        padding-left: 1.2em;
+      }
+      .article li {
+        margin-bottom: 8px;
+      }
+      .article strong {
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .callout {
+        margin: 16px 0;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.2);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-weight: 650;
+        font-size: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .btn--primary {
+        border-color: rgba(255, 221, 133, 0.45);
+        background: linear-gradient(135deg, rgba(255, 221, 133, 0.92), rgba(255, 111, 177, 0.78));
+        color: rgba(20, 18, 28, 0.92);
+      }
+      .btn:hover {
+        filter: brightness(1.05);
+      }
+      .footer {
+        margin-top: 16px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.55);
+        text-align: center;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-title">
+            <strong>06 — Кейсы</strong>
+            <span>Коммуникация и влияние</span>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Навигация по сайту">
+          <a href="01_Основная_страница.html">Главная</a>
+          <a href="02_Материалы.html">Материалы</a>
+        </nav>
+      </header>
+
+      <main class="hero">
+        <div class="hero-inner">
+          <h1>Кейсы и коммуникация</h1>
+          <p class="lead">
+            Сильный продакт-аналитик умеет не только посчитать, но и договориться о задаче, задать уточняющие вопросы и
+            донести вывод так, чтобы по нему можно было принять решение.
+          </p>
+
+          <article class="article">
+            <h2>Кейс на собеседовании</h2>
+            <p>Типичная структура ответа (её можно сжать до 3–5 минут):</p>
+            <ul>
+              <li><strong>Уточнить цель</strong> — что значит успех, какие ограничения по времени и ресурсам.</li>
+              <li><strong>Определить метрику</strong> — одна primary, при необходимости guardrails.</li>
+              <li><strong>План анализа</strong> — какие срезы, какие данные, какие риски смещения.</li>
+              <li><strong>Ответ</strong> — качественный вывод + порядок величины или направление эффекта.</li>
+              <li><strong>Следующий шаг</strong> — что проверить экспериментом или какой артефакт нужен команде.</li>
+            </ul>
+            <p>
+              Если данных в формулировке не хватает, <strong>задавайте вопросы вслух</strong> — это плюс, а не минус: так вы
+              показываете продуктовое мышление.
+            </p>
+
+            <h2>Вопросы стейкхолдеру до работы</h2>
+            <p>Примеры формулировок:</p>
+            <ul>
+              <li>«Какое решение мы хотим принять после анализа?»</li>
+              <li>«Что будет считаться достаточным доказательством?»</li>
+              <li>«Есть ли ожидаемый дедлайн и неизменяемые ограничения (юридические, технические)?»</li>
+            </ul>
+
+            <h2>Как писать вывод одним сообщением</h2>
+            <p>
+              Короткий формат: <strong>контекст → что посчитали → главный факт → ограничение → рекомендация</strong>.
+              Избегайте «воды» и вложенных отчётов в чате: лучше ссылка на блокнот/дашборд и три цифры, которые меняют
+              решение.
+            </p>
+
+            <h2>Презентация для команды</h2>
+            <h3>Слайд 1</h3>
+            <p>Вопрос и почему он важен сейчас.</p>
+            <h3>Слайд 2</h3>
+            <p>Метод: данные, период, фильтры, определения.</p>
+            <h3>Слайд 3</h3>
+            <p>Результат: график или таблица + словами «что видим».</p>
+            <h3>Слайд 4</h3>
+            <p>Оговорки и альтернативные объяснения.</p>
+            <h3>Слайд 5</h3>
+            <p>Рекомендация и что нужно от PM/разработки/дизайна.</p>
+
+            <h2>Типичные ошибки в коммуникации</h2>
+            <ul>
+              <li>Перегруз деталями без ответа на вопрос «что делать».</li>
+              <li>Скрытие неопределённости — лучше честно назвать, что данных мало и что сделать дальше.</li>
+              <li>Спор с мнением без привязки к данным и критериям.</li>
+            </ul>
+
+            <div class="callout">
+              <strong>Памятка:</strong> один анализ — одна главная мысль для аудитории. Всё остальное — в приложении или по
+              запросу.
+            </div>
+          </article>
+
+          <div class="btn-row">
+            <a class="btn" href="01_Основная_страница.html">← На главную</a>
+            <a class="btn btn--primary" href="02_Материалы.html">К списку материалов</a>
+          </div>
+          <p class="footer">© <span id="year"></span> · Тема 06</p>
+        </div>
+      </main>
+    </div>
+    <script>
+      document.getElementById("year").textContent = String(new Date().getFullYear());
+    </script>
+  </body>
+</html>
