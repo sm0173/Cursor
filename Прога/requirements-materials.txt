@@ -1,0 +1,5 @@
+# Для convert_materials.py (ноутбуки + PDF)
+nbconvert>=7.0
+nbformat>=5.0
+jupyter-core
+pymupdf>=1.23.0

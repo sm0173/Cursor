@@ -1,0 +1,2724 @@
+Источник: Seminar 6 - Visualizations.ipynb
+
+---
+
+# Программирование на Python, БИ
+
+## НИУ ВШЭ, 2025-26 учебный год
+
+# Семинар 6. Visualizations
+
+## Раздел 1. Основы Matplotlib
+
+Начнём наш разговор, пожалуй, с того, что, вообще говоря, вы, конечно, можете строить графики и использовать для применения визуализаций в вашей работе — а не в рамках нашего курса — любые программные средства и любые модули, которые вам удобны, — не обязательно Matplotlib, да и в принципе не обязательно библиотеки Python. В то же время мы со своей стороны на дисциплине предлагаем вам к изучению — и даже тратим на это довольно много времени — именно этот непростой инструмент. Почему же всё-таки так?
+
+Библиотека Matplotlib — а вместе с тем и все расширяющие, и дополняющие её последующие библиотеки типа Seaborn — хотя и могут на первый взгляд казаться существенно сложнее того же хорошо знакомого нам Excel, — в то же время предоставляют гораздо большую гибкость; изложение становится более плавным, последовательным — например, как в этом ноутбуке, текст подкрепляется графиками и кодом; — а также появляется возможность визуализировать наборы данных такого объема, с которыми Excel в принципе не может работать. Последнее, возможно, является одним из наиболее критичных аргументов, особенно для ряда специализированных областей.
+
+Так что давайте не будем тратить время: импортируем нашу библиотеку, пропишем магическую функцию, позволяющую отображать графики прямо в самом ноутбуке, и непосредственно приступим с вами к важному разговору про Matplotlib.
+
+
+```
+import matplotlib.pyplot as plt
+%matplotlib inline
+```
+
+[Куча примеров и best practices](https://matplotlib.org/gallery/index.html) по построению графиков.
+
+
+### Функция Plot и основные настройки
+
+Самой базовой и простейшей визуализацией в Matplotlib, которую вы можете быстро и без каких-либо сложностей построить, почти ничего не зная про библиотеку, — является обычный линейный Plot. Именно на примере этого графика предлагается начать разбор концептуальных основ Matplotlib'а; а заодно в дополнение мы сможем рассмотреть основные параметры и настройки, которые в дальнейшем будут применяться практически в каждом графике, который можно построить.
+
+
+
+Чтобы мы с вами сразу могли обсуждать всё на практике, давайте возьмём знакомую нам из математики функцию синуса и сгенерируем пока что синтетические данные для неё на отрезке от 0 до 3π. Это будет нашим первым тренировочным примером, разобравшись с которым, уже можно будет постепенно переходить к реальным данным.
+
+
+```
+import numpy as np
+```
+
+
+```
+x = np.arange(0, 3 * np.pi, 0.1)
+y = np.sin(x)
+```
+
+Что произошло в ячейке выше? Что будет храниться в переменных `x` и `y`?
+
+Для того чтобы построить наш первый график, воспользовавшись функцией `plt.plot`, нам необходимо передать ей в качестве параметров минимум 2 аргумента: массив значений для оси x и массив значений для оси y.
+
+Как и любая функция, осуществляющая визуализацию простого линейного Plot, данная функция вначале наносит на график точки, представляя их парами координат вида: (x1; y1), (x2; y2), ..., (xn; yn), — а затем просто аппроксимирует зависимость по ним с помощью непрерывной гладкой линии. Разумеется, чем больше точек вы укажете в рамках массивов для графика, тем плавнее и красивее получится эта линия, построенная программой.
+
+Кроме того, из всего выше следует, что размерности `x` и `y` должны обязательно совпадать — без этого ничего просто не будет работать.
+
+
+
+
+```
+plt.plot(x, y)
+```
+
+
+
+
+    [<matplotlib.lines.Line2D at 0x7b64692f9fd0>]
+
+
+
+
+    
+![png](output_12_1.png)
+    
+
+
+Ура! Мы построили наш первый график. Пока что ничего особо сложного, как вы можете видеть! :)
+
+И он даже похож на то, что мы бы ожидали получить от синуса.. :)
+
+В примере, рассмотренном выше, мы используем так называемый функциональный стиль визуализации в Matplotlib, который очень похож на стиль из Matlab (если вдруг кто-то знает такой пакет, активно использовавшийся ещё несколько лет назад). Идея этого функционального стиля заключается в том, что при построении визуализации мы оперируем глобальным объектом `plt` ("рисовалка") и все команды и действия осуществляем, обращаясь только к нему.
+
+Существует также и альтернативный вариант — так называемый объектный стиль, — когда мы явно задаём и затем оперируем всей "фигурой" и "осями" для нашего графика.
+
+К объектному стилю визуализации мы ещё сегодня вернёмся позднее, а пока что давайте в рамках функционального стиля рассмотрим функцию `plt.figure`. Данная команда в качестве параметров принимает такие свойства, как размер всего графика ("фигуры") — `figsize`; или цвет фона графика — `facecolor`; и множество других. С полным списком доступных параметров для `plt.figure` можно ознакомиться, например, [здесь](https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.figure.html).
+
+Помимо этого в глобальном объекте `plt` доступны и другие методы: например, мы можем выставить графику заголовок с помощью `plt.title`, можем подписать оси с помощью `plt.xlabel` и `plt.ylabel`, а также сделать много чего ещё. Стоит отметить, что всё это оформление считается хорошим тоном при построении графиков.
+
+Итак, давайте продолжим работать с нашим графиком синуса и постепенно будем его модифицировать, применяя к нему новые функции, параметры и используя новые детали оформления. Чтобы все изменения отслеживать было проще, давайте, начиная с ближайшей ячейки и далее, помечать обновленные и/или добавленные нами блоки, а также все прочие изменения — с помощью символов `###`.
+
+Для начала укажем заголовок, нанесем подписи осей, а также настроим размер фигуры для более красивого отображения:
+
+
+```
+x = np.arange(0, 3 * np.pi, 0.1)
+y = np.sin(x)
+
+###
+plt.figure(figsize=(16,9))
+###
+
+plt.plot(x, y)
+
+###
+plt.title("График синуса")
+plt.xlabel("x")
+plt.ylabel("y")
+
+plt.show()
+###
+```
+
+
+    
+![png](output_16_0.png)
+    
+
+
+Вызывая несколько раз функцию plt.plot мы будем добавлять графики на полотно.
+
+С помощью plt.legend мы можем указать легенду для наших графиков.
+
+
+```
+x = np.arange(0, 3 * np.pi, 0.1)
+###
+y_sin = np.sin(x)
+y_cos = np.cos(x)
+###
+
+plt.figure(figsize=(16,9))
+###
+plt.plot(x, y_sin)
+plt.plot(x, y_cos)
+###
+plt.title("График синуса и косинуса")
+plt.xlabel("x")
+plt.ylabel("y")
+###
+plt.legend(['sin', 'cos'])
+###
+plt.show()
+```
+
+
+    
+![png](output_18_0.png)
+    
+
+
+Мы также можем отобразить текст в произвольном месте нашего графика, для этого в plt.text передаем координату x и координату y левого верхнего угла блока с нашим текстом, а затем указываем сам текст и свойства для отображения текста.
+
+
+```
+x = np.arange(0, 3 * np.pi, 0.1)
+y_sin = np.sin(x)
+y_cos = np.cos(x)
+
+plt.figure(figsize=(16,9))
+plt.plot(x, y_sin)
+plt.plot(x, y_cos)
+plt.title("График синуса и косинуса")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend(['sin', 'cos'])
+###
+plt.text(2, -0.5, 'Это какой-то текст на графике', bbox=dict(facecolor='red', alpha=0.5), fontsize=14)
+###
+plt.show()
+```
+
+
+    
+![png](output_20_0.png)
+    
+
+
+Любопытная опция "стиль линии" linestyle для `plt.plot`
+
+
+```
+x = np.arange(0, 3 * np.pi, 0.1)
+y_sin = np.sin(x)
+y_cos = np.cos(x)
+
+plt.figure(figsize=(16,9))
+###
+plt.plot(x, y_sin, linestyle='--')
+plt.plot(x, y_cos, linestyle='dashdot')
+###
+plt.title("График синуса и косинуса")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend(['sin', 'cos'])
+plt.text(2, -0.5, 'Это какой-то текст на графике', bbox=dict(facecolor='red', alpha=0.5), fontsize=14)
+plt.show()
+```
+
+
+    
+![png](output_22_0.png)
+    
+
+
+Можно также поменять толщину линии с помощью linewidth и ее прозрачность с помощью alpha. Прозрачность доступна и для других функций для отрисовки. Эта опция полезна тогда, когда у вас происходит существенное наложение одного графика на другой.
+
+
+```
+# Изменение толщины линии и прозрачности
+x = np.arange(0, 3 * np.pi, 0.1)
+y_sin = np.sin(x)
+y_cos = np.cos(x)
+
+plt.figure(figsize=(16,9))
+###
+plt.plot(x, y_sin, linestyle='--', linewidth=10, alpha=0.2)
+###
+plt.plot(x, y_cos, linestyle='dashdot')
+plt.title("График синуса и косинуса")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend(['sin', 'cos'])
+###
+plt.text(2, -0.5, 'Это какой-то текст на графике', bbox=dict(facecolor='red', alpha=0.5, boxstyle = 'round,pad=0.5'), fontsize=14)
+###
+plt.show()
+```
+
+
+    
+![png](output_24_0.png)
+    
+
+
+Полный набор опций для `plt.plot()` вы можете найти [здесь](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.plot.html).
+
+### Scatter plot
+
+Рассмотрим другие функции для отрисовки. Например, `plt.scatter` также принимает на вход список x и y, но не соединяет точки друг с другом.
+
+
+```
+plt.scatter(x, y_sin)
+```
+
+
+
+
+    <matplotlib.collections.PathCollection at 0x7b6469d433d0>
+
+
+
+
+    
+![png](output_28_1.png)
+    
+
+
+Мы можем, например, менять форму точки
+
+
+```
+plt.scatter(x, y_sin, marker='*',)
+```
+
+
+
+
+    <matplotlib.collections.PathCollection at 0x7b64589d8d10>
+
+
+
+
+    
+![png](output_30_1.png)
+    
+
+
+Если мы передадим в опции s список такого же размера, что x и y, то у нас будет меняться размер точек в соответствии с тем, который мы укажем
+
+
+```
+plt.figure(figsize=(16,9))
+plt.scatter(x, y_sin, s=np.abs(y_cos)*20)
+```
+
+
+
+
+    <matplotlib.collections.PathCollection at 0x7b645871e850>
+
+
+
+
+    
+![png](output_32_1.png)
+    
+
+
+Аналогично, мы можем менять цвет точек с помощью параметра c
+
+
+```
+plt.figure(figsize=(16,9))
+colors_glossary = ['#39AAA67F', 'purple']
+
+# for i in range(x.shape[0]):
+#     colors.append(colors_glossary[i % 2])
+
+colors = [colors_glossary[i % 2] for i in range(x.shape[0])]
+plt.scatter(x, y_sin, s=np.abs(y_cos)*20, c=colors)
+
+plt.grid(axis = 'x', color='black', linestyle='-.', linewidth=0.3)
+```
+
+
+    
+![png](output_34_0.png)
+    
+
+
+### Другие графики Matplotlib
+
+`plt.bar` отображает столбчатую диаграмму
+
+
+```
+plt.bar(x, y_sin)
+```
+
+
+
+
+    <BarContainer object of 95 artists>
+
+
+
+
+    
+![png](output_37_1.png)
+    
+
+
+#### Вопрос
+
+Чем отличается barplot от гистограммы?
+
+plt.hist принимает всего один список на вход, и отрисовывает частоту встречаемости значений в списке по интервалам (бакетам или бинам)
+
+
+```
+plt.hist(y_sin, bins='auto') # bins регулирует число столбиков
+```
+
+
+
+
+    (array([15.,  6.,  6.,  4., 12., 10., 14., 28.]),
+     array([-9.99923258e-01, -7.49986150e-01, -5.00049042e-01, -2.50111935e-01,
+            -1.74827261e-04,  2.49762280e-01,  4.99699388e-01,  7.49636495e-01,
+             9.99573603e-01]),
+     <BarContainer object of 8 artists>)
+
+
+
+
+    
+![png](output_40_1.png)
+    
+
+
+Если мы передадим параметр density=True, то получим нормированную гистограмму, то есть некоторого рода оценку плотности вероятности встречаемости значений нашего списка. Таким образом "площадь под графиком" будет равна 1.
+
+
+```
+plt.hist(y_sin, bins='auto', density=True)
+```
+
+
+
+
+    (array([0.63173787, 0.25269515, 0.25269515, 0.16846343, 0.5053903 ,
+            0.42115858, 0.58962202, 1.17924403]),
+     array([-9.99923258e-01, -7.49986150e-01, -5.00049042e-01, -2.50111935e-01,
+            -1.74827261e-04,  2.49762280e-01,  4.99699388e-01,  7.49636495e-01,
+             9.99573603e-01]),
+     <BarContainer object of 8 artists>)
+
+
+
+
+    
+![png](output_42_1.png)
+    
+
+
+Больше информации и всевозможных параметров вы можете найти в документации:
+1. [plt.scatter](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.scatter.html)
+2. [plt.bar](https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.bar.html)
+3. [plt.hist](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html)
+
+### Функциональный и объектный подход в Matplotlib
+
+С помощью глобального объекта plt мы можем рисовать несколько пар осей на одном "полотне". Как уже упоминалось, это представляет собой так называемый первый или функциональный подход.
+
+plt.subplot принимает первым параметром кол-во строк сетки, вторым кол-во столбцов сетки, а последний параметр устанаваливает ту пару осей с которой мы работаем сейчас.
+
+Рекомендую потренироваться с этим примером самостоятельно.
+
+
+```
+plt.figure(figsize=(12,3))
+plt.subplot(1,2,1) # с этого момента рисуем на паре осей 1
+#
+#
+plt.plot(x, y_sin)
+#
+#
+plt.subplot(1,2,2) # с этого момента рисуем на паре осей 2
+#
+#
+plt.plot(x, y_cos)
+#
+#
+plt.show()
+```
+
+
+    
+![png](output_46_0.png)
+    
+
+
+Ниже мы покажем альтернативный способ отображать несколько графиков на одном полотне. Здесь используется так называемый объектный интерфейс, который мы уже упоминали выше.
+
+[plt.subplots()](https://matplotlib.org/api/_as_gen/matplotlib.pyplot.subplots.html) также принимает кол-во строк и столбцов, а также все те параметры, что принмает `plt.figure()`. Возвращает два объекта: объект фигуры и набор объектов осей в виде numpy массива размерности кол-во строк на кол-во столбцов.
+
+
+```
+fig, axes = plt.subplots(2,2, figsize=(16,9))
+
+l = [[1,2,3], [4,5,6], [8,8,9], [100,1,2,3]]
+for idx, ax in enumerate(axes.ravel()):
+  ax.hist(l[idx])
+```
+
+
+    
+![png](output_48_0.png)
+    
+
+
+### Задание для самостоятельного решения (объектный подход в Matplotlib)
+
+Выведите 4 графика сеткой 2х2 (2 в первой строке, 2 во второй строке), которые представляют собой 4 математические функции для объекта оси `x`, заданного в коде раннее: синус, косинус, тангенс, экспонента. Цвета для графиков должны быть соответственно следующими: красный, синий, зеленый, пурпурный. Вывод графиков необходимо осуществить циклом и использовать объектный подход Matplotlib (`plt.subplots`, `fig`, `axes`)
+
+
+```
+# your code here
+```
+
+    [<Axes: > <Axes: > <Axes: > <Axes: >]
+    
+
+
+    
+![png](output_50_1.png)
+    
+
+
+## Раздел 2. Matplotlib на реальных данных. Практика
+
+
+
+Ну что же — пришло время Make visualizations great again :)
+
+Поработаем с реальными датасетами!!
+
+Ссылки на данные и различную справочную информацию для дополнительного изучения
+
+https://drive.google.com/file/d/1eBnVjIbDuSRtSUhqrR_TEUiRaz_t7QDH/view?usp=sharing
+
+https://drive.google.com/file/d/1i3I2gC4US6fSIg4ett1ZttDLWwda0dcu/view?usp=sharing
+
+
+[What is money supply?](https://www.khanacademy.org/economics-finance-domain/ap-macroeconomics/ap-financial-sector/definition-measurement-and-functions-of-money-ap/v/money-supply-m0-m1-and-m2)
+
+The United States Money Supply M0 is the most liquid measure of the money supply including coins and notes in circulation and other assets that are easily convertible into cash. Money Supply M0 and M1, are also known as narrow money.
+
+[What is bitcoin?](https://www.investopedia.com/terms/b/bitcoin.asp)
+
+
+```
+from google.colab import files
+uploaded = files.upload()
+```
+
+
+
+     <input type="file" id="files-6faa64fe-48a7-46cf-b517-c7fa01e0c53c" name="files[]" multiple disabled
+        style="border:none" />
+     <output id="result-6faa64fe-48a7-46cf-b517-c7fa01e0c53c">
+      Upload widget is only available when the cell has been executed in the
+      current browser session. Please rerun this cell to enable.
+      </output>
+      <script>// Copyright 2017 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @fileoverview Helpers for google.colab Python module.
+ */
+(function(scope) {
+function span(text, styleAttributes = {}) {
+  const element = document.createElement('span');
+  element.textContent = text;
+  for (const key of Object.keys(styleAttributes)) {
+    element.style[key] = styleAttributes[key];
+  }
+  return element;
+}
+
+// Max number of bytes which will be uploaded at a time.
+const MAX_PAYLOAD_SIZE = 100 * 1024;
+
+function _uploadFiles(inputId, outputId) {
+  const steps = uploadFilesStep(inputId, outputId);
+  const outputElement = document.getElementById(outputId);
+  // Cache steps on the outputElement to make it available for the next call
+  // to uploadFilesContinue from Python.
+  outputElement.steps = steps;
+
+  return _uploadFilesContinue(outputId);
+}
+
+// This is roughly an async generator (not supported in the browser yet),
+// where there are multiple asynchronous steps and the Python side is going
+// to poll for completion of each step.
+// This uses a Promise to block the python side on completion of each step,
+// then passes the result of the previous step as the input to the next step.
+function _uploadFilesContinue(outputId) {
+  const outputElement = document.getElementById(outputId);
+  const steps = outputElement.steps;
+
+  const next = steps.next(outputElement.lastPromiseValue);
+  return Promise.resolve(next.value.promise).then((value) => {
+    // Cache the last promise value to make it available to the next
+    // step of the generator.
+    outputElement.lastPromiseValue = value;
+    return next.value.response;
+  });
+}
+
+/**
+ * Generator function which is called between each async step of the upload
+ * process.
+ * @param {string} inputId Element ID of the input file picker element.
+ * @param {string} outputId Element ID of the output display.
+ * @return {!Iterable<!Object>} Iterable of next steps.
+ */
+function* uploadFilesStep(inputId, outputId) {
+  const inputElement = document.getElementById(inputId);
+  inputElement.disabled = false;
+
+  const outputElement = document.getElementById(outputId);
+  outputElement.innerHTML = '';
+
+  const pickedPromise = new Promise((resolve) => {
+    inputElement.addEventListener('change', (e) => {
+      resolve(e.target.files);
+    });
+  });
+
+  const cancel = document.createElement('button');
+  inputElement.parentElement.appendChild(cancel);
+  cancel.textContent = 'Cancel upload';
+  const cancelPromise = new Promise((resolve) => {
+    cancel.onclick = () => {
+      resolve(null);
+    };
+  });
+
+  // Wait for the user to pick the files.
+  const files = yield {
+    promise: Promise.race([pickedPromise, cancelPromise]),
+    response: {
+      action: 'starting',
+    }
+  };
+
+  cancel.remove();
+
+  // Disable the input element since further picks are not allowed.
+  inputElement.disabled = true;
+
+  if (!files) {
+    return {
+      response: {
+        action: 'complete',
+      }
+    };
+  }
+
+  for (const file of files) {
+    const li = document.createElement('li');
+    li.append(span(file.name, {fontWeight: 'bold'}));
+    li.append(span(
+        `(${file.type || 'n/a'}) - ${file.size} bytes, ` +
+        `last modified: ${
+            file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() :
+                                    'n/a'} - `));
+    const percent = span('0% done');
+    li.appendChild(percent);
+
+    outputElement.appendChild(li);
+
+    const fileDataPromise = new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        resolve(e.target.result);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+    // Wait for the data to be ready.
+    let fileData = yield {
+      promise: fileDataPromise,
+      response: {
+        action: 'continue',
+      }
+    };
+
+    // Use a chunked sending to avoid message size limits. See b/62115660.
+    let position = 0;
+    do {
+      const length = Math.min(fileData.byteLength - position, MAX_PAYLOAD_SIZE);
+      const chunk = new Uint8Array(fileData, position, length);
+      position += length;
+
+      const base64 = btoa(String.fromCharCode.apply(null, chunk));
+      yield {
+        response: {
+          action: 'append',
+          file: file.name,
+          data: base64,
+        },
+      };
+
+      let percentDone = fileData.byteLength === 0 ?
+          100 :
+          Math.round((position / fileData.byteLength) * 100);
+      percent.textContent = `${percentDone}% done`;
+
+    } while (position < fileData.byteLength);
+  }
+
+  // All done.
+  yield {
+    response: {
+      action: 'complete',
+    }
+  };
+}
+
+scope.google = scope.google || {};
+scope.google.colab = scope.google.colab || {};
+scope.google.colab._files = {
+  _uploadFiles,
+  _uploadFilesContinue,
+};
+})(self);
+</script> 
+
+
+    Saving historical_country_United_States_indicator_Money_Supply_M0.csv to historical_country_United_States_indicator_Money_Supply_M0.csv
+    Saving BTC-USD.csv to BTC-USD.csv
+    
+
+
+```
+!ls
+```
+
+    BTC-USD.csv  historical_country_United_States_indicator_Money_Supply_M0.csv  sample_data
+    
+
+
+```
+import pandas as pd
+
+btc_usd = pd.read_csv('BTC-USD.csv')
+money_supply = pd.read_csv('historical_country_United_States_indicator_Money_Supply_M0.csv')
+```
+
+
+```
+btc_usd
+```
+
+
+
+
+
+  <div id="df-b99af9c3-7df8-445f-aa26-c1d4b7dec102" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Date</th>
+      <th>Open</th>
+      <th>High</th>
+      <th>Low</th>
+      <th>Close</th>
+      <th>Adj Close</th>
+      <th>Volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2014-10-01</td>
+      <td>387.427002</td>
+      <td>411.697998</td>
+      <td>289.295990</td>
+      <td>338.321014</td>
+      <td>338.321014</td>
+      <td>902994450</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2014-11-01</td>
+      <td>338.649994</td>
+      <td>457.092987</td>
+      <td>320.626007</td>
+      <td>378.046997</td>
+      <td>378.046997</td>
+      <td>659733360</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2014-12-01</td>
+      <td>378.248993</td>
+      <td>384.037994</td>
+      <td>304.231995</td>
+      <td>320.192993</td>
+      <td>320.192993</td>
+      <td>553102310</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2015-01-01</td>
+      <td>320.434998</td>
+      <td>320.434998</td>
+      <td>171.509995</td>
+      <td>217.464005</td>
+      <td>217.464005</td>
+      <td>1098811912</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2015-02-01</td>
+      <td>216.867004</td>
+      <td>265.610992</td>
+      <td>212.014999</td>
+      <td>254.263000</td>
+      <td>254.263000</td>
+      <td>711518700</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>74</th>
+      <td>2020-12-01</td>
+      <td>19633.769531</td>
+      <td>29244.876953</td>
+      <td>17619.533203</td>
+      <td>29001.720703</td>
+      <td>29001.720703</td>
+      <td>1212259707946</td>
+    </tr>
+    <tr>
+      <th>75</th>
+      <td>2021-01-01</td>
+      <td>28994.009766</td>
+      <td>41946.738281</td>
+      <td>28722.755859</td>
+      <td>33114.359375</td>
+      <td>33114.359375</td>
+      <td>2155904438233</td>
+    </tr>
+    <tr>
+      <th>76</th>
+      <td>2021-02-01</td>
+      <td>33114.578125</td>
+      <td>58330.570313</td>
+      <td>32384.228516</td>
+      <td>45137.769531</td>
+      <td>45137.769531</td>
+      <td>2267152936675</td>
+    </tr>
+    <tr>
+      <th>77</th>
+      <td>2021-03-01</td>
+      <td>45159.503906</td>
+      <td>61683.863281</td>
+      <td>45115.093750</td>
+      <td>58870.894531</td>
+      <td>58870.894531</td>
+      <td>893379837811</td>
+    </tr>
+    <tr>
+      <th>78</th>
+      <td>2021-03-19</td>
+      <td>57699.785156</td>
+      <td>58873.882813</td>
+      <td>56660.320313</td>
+      <td>58573.390625</td>
+      <td>58573.390625</td>
+      <td>56108134400</td>
+    </tr>
+  </tbody>
+</table>
+<p>79 rows × 7 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-b99af9c3-7df8-445f-aa26-c1d4b7dec102')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-b99af9c3-7df8-445f-aa26-c1d4b7dec102 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-b99af9c3-7df8-445f-aa26-c1d4b7dec102');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-0b991929-2e36-4715-b3e7-733ba9b01e42">
+  <button class="colab-df-quickchart" onclick="quickchart('df-0b991929-2e36-4715-b3e7-733ba9b01e42')"
+            title="Suggest charts"
+            style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-0b991929-2e36-4715-b3e7-733ba9b01e42 button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+    </div>
+  </div>
+
+
+
+
+
+```
+btc_usd.dtypes
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Date</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>Open</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>High</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Low</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Close</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Adj Close</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Volume</th>
+      <td>int64</td>
+    </tr>
+  </tbody>
+</table>
+</div><br><label><b>dtype:</b> object</label>
+
+
+
+
+```
+btc_usd = btc_usd.astype({"Date": "datetime64[s]"})
+btc_usd
+```
+
+
+
+
+
+  <div id="df-b97ff4e2-c405-4cf9-a957-a060d7018dc1" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Date</th>
+      <th>Open</th>
+      <th>High</th>
+      <th>Low</th>
+      <th>Close</th>
+      <th>Adj Close</th>
+      <th>Volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2014-10-01</td>
+      <td>387.427002</td>
+      <td>411.697998</td>
+      <td>289.295990</td>
+      <td>338.321014</td>
+      <td>338.321014</td>
+      <td>902994450</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2014-11-01</td>
+      <td>338.649994</td>
+      <td>457.092987</td>
+      <td>320.626007</td>
+      <td>378.046997</td>
+      <td>378.046997</td>
+      <td>659733360</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2014-12-01</td>
+      <td>378.248993</td>
+      <td>384.037994</td>
+      <td>304.231995</td>
+      <td>320.192993</td>
+      <td>320.192993</td>
+      <td>553102310</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2015-01-01</td>
+      <td>320.434998</td>
+      <td>320.434998</td>
+      <td>171.509995</td>
+      <td>217.464005</td>
+      <td>217.464005</td>
+      <td>1098811912</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2015-02-01</td>
+      <td>216.867004</td>
+      <td>265.610992</td>
+      <td>212.014999</td>
+      <td>254.263000</td>
+      <td>254.263000</td>
+      <td>711518700</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>74</th>
+      <td>2020-12-01</td>
+      <td>19633.769531</td>
+      <td>29244.876953</td>
+      <td>17619.533203</td>
+      <td>29001.720703</td>
+      <td>29001.720703</td>
+      <td>1212259707946</td>
+    </tr>
+    <tr>
+      <th>75</th>
+      <td>2021-01-01</td>
+      <td>28994.009766</td>
+      <td>41946.738281</td>
+      <td>28722.755859</td>
+      <td>33114.359375</td>
+      <td>33114.359375</td>
+      <td>2155904438233</td>
+    </tr>
+    <tr>
+      <th>76</th>
+      <td>2021-02-01</td>
+      <td>33114.578125</td>
+      <td>58330.570313</td>
+      <td>32384.228516</td>
+      <td>45137.769531</td>
+      <td>45137.769531</td>
+      <td>2267152936675</td>
+    </tr>
+    <tr>
+      <th>77</th>
+      <td>2021-03-01</td>
+      <td>45159.503906</td>
+      <td>61683.863281</td>
+      <td>45115.093750</td>
+      <td>58870.894531</td>
+      <td>58870.894531</td>
+      <td>893379837811</td>
+    </tr>
+    <tr>
+      <th>78</th>
+      <td>2021-03-19</td>
+      <td>57699.785156</td>
+      <td>58873.882813</td>
+      <td>56660.320313</td>
+      <td>58573.390625</td>
+      <td>58573.390625</td>
+      <td>56108134400</td>
+    </tr>
+  </tbody>
+</table>
+<p>79 rows × 7 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-b97ff4e2-c405-4cf9-a957-a060d7018dc1')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-b97ff4e2-c405-4cf9-a957-a060d7018dc1 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-b97ff4e2-c405-4cf9-a957-a060d7018dc1');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-dd71776d-1fdd-49d3-b48b-8901300c39b0">
+  <button class="colab-df-quickchart" onclick="quickchart('df-dd71776d-1fdd-49d3-b48b-8901300c39b0')"
+            title="Suggest charts"
+            style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-dd71776d-1fdd-49d3-b48b-8901300c39b0 button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+    </div>
+  </div>
+
+
+
+
+
+```
+btc_usd.dtypes
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Date</th>
+      <td>datetime64[s]</td>
+    </tr>
+    <tr>
+      <th>Open</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>High</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Low</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Close</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Adj Close</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>Volume</th>
+      <td>int64</td>
+    </tr>
+  </tbody>
+</table>
+</div><br><label><b>dtype:</b> object</label>
+
+
+
+
+```
+money_supply.head()
+```
+
+
+
+
+
+  <div id="df-4f547966-3e56-46bc-8ffa-e3aafbb79e31" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Country</th>
+      <th>Category</th>
+      <th>DateTime</th>
+      <th>Value</th>
+      <th>Frequency</th>
+      <th>HistoricalDataSymbol</th>
+      <th>LastUpdate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-01-31T00:00:00</td>
+      <td>50463</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-02-28T00:00:00</td>
+      <td>49805</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-03-31T00:00:00</td>
+      <td>49733</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-04-30T00:00:00</td>
+      <td>50058</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-05-31T00:00:00</td>
+      <td>50112</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-4f547966-3e56-46bc-8ffa-e3aafbb79e31')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-4f547966-3e56-46bc-8ffa-e3aafbb79e31 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-4f547966-3e56-46bc-8ffa-e3aafbb79e31');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-d7a1c5be-176e-4e9c-924c-9a9260b3774d">
+  <button class="colab-df-quickchart" onclick="quickchart('df-d7a1c5be-176e-4e9c-924c-9a9260b3774d')"
+            title="Suggest charts"
+            style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-d7a1c5be-176e-4e9c-924c-9a9260b3774d button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+    </div>
+  </div>
+
+
+
+
+
+```
+money_supply.dtypes
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Country</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>Category</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>DateTime</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>Value</th>
+      <td>int64</td>
+    </tr>
+    <tr>
+      <th>Frequency</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>HistoricalDataSymbol</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>LastUpdate</th>
+      <td>object</td>
+    </tr>
+  </tbody>
+</table>
+</div><br><label><b>dtype:</b> object</label>
+
+
+
+
+```
+money_supply.astype({"DateTime": "datetime64[s]"})
+```
+
+
+
+
+
+  <div id="df-60872c01-5fb2-437a-a47a-1dbfafcb6347" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Country</th>
+      <th>Category</th>
+      <th>DateTime</th>
+      <th>Value</th>
+      <th>Frequency</th>
+      <th>HistoricalDataSymbol</th>
+      <th>LastUpdate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-01-31</td>
+      <td>50463</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-02-28</td>
+      <td>49805</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-03-31</td>
+      <td>49733</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-04-30</td>
+      <td>50058</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>1959-05-31</td>
+      <td>50112</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2015-04-25T21:12:00</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>740</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>2020-09-30</td>
+      <td>4880400</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2020-10-17T10:11:00</td>
+    </tr>
+    <tr>
+      <th>741</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>2020-10-31</td>
+      <td>4917100</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2020-11-14T10:08:00</td>
+    </tr>
+    <tr>
+      <th>742</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>2020-11-30</td>
+      <td>5093100</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2020-12-12T10:07:00</td>
+    </tr>
+    <tr>
+      <th>743</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>2020-12-31</td>
+      <td>5206600</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2021-01-16T10:11:00</td>
+    </tr>
+    <tr>
+      <th>744</th>
+      <td>United States</td>
+      <td>Money Supply M0</td>
+      <td>2021-01-31</td>
+      <td>5247900</td>
+      <td>Monthly</td>
+      <td>UNITEDSTAMONSUPM0</td>
+      <td>2021-02-13T10:07:00</td>
+    </tr>
+  </tbody>
+</table>
+<p>745 rows × 7 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-60872c01-5fb2-437a-a47a-1dbfafcb6347')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-60872c01-5fb2-437a-a47a-1dbfafcb6347 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-60872c01-5fb2-437a-a47a-1dbfafcb6347');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-f370235f-af3b-4798-a217-1a72e1e26ba5">
+  <button class="colab-df-quickchart" onclick="quickchart('df-f370235f-af3b-4798-a217-1a72e1e26ba5')"
+            title="Suggest charts"
+            style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-f370235f-af3b-4798-a217-1a72e1e26ba5 button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+    </div>
+  </div>
+
+
+
+
+
+```
+money_supply['DateTime'].to_numpy().astype('datetime64[D]')
+```
+
+
+
+
+    array(['1959-01-31', '1959-02-28', '1959-03-31', '1959-04-30',
+           '1959-05-31', '1959-06-30', '1959-07-31', '1959-08-31',
+           '1959-09-30', '1959-10-31', '1959-11-30', '1959-12-31',
+           '1960-01-31', '1960-02-29', '1960-03-31', '1960-04-30',
+           '1960-05-31', '1960-06-30', '1960-07-31', '1960-08-31',
+           '1960-09-30', '1960-10-31', '1960-11-30', '1960-12-31',
+           '1961-01-31', '1961-02-28', '1961-03-31', '1961-04-30',
+           '1961-05-31', '1961-06-30', '1961-07-31', '1961-08-31',
+           '1961-09-30', '1961-10-31', '1961-11-30', '1961-12-31',
+           '1962-01-31', '1962-02-28', '1962-03-31', '1962-04-30',
+           '1962-05-31', '1962-06-30', '1962-07-31', '1962-08-31',
+           '1962-09-30', '1962-10-31', '1962-11-30', '1962-12-31',
+           '1963-01-31', '1963-02-28', '1963-03-31', '1963-04-30',
+           '1963-05-31', '1963-06-30', '1963-07-31', '1963-08-31',
+           '1963-09-30', '1963-10-31', '1963-11-30', '1963-12-31',
+           '1964-01-31', '1964-02-29', '1964-03-31', '1964-04-30',
+           '1964-05-31', '1964-06-30', '1964-07-31', '1964-08-31',
+           '1964-09-30', '1964-10-31', '1964-11-30', '1964-12-31',
+           '1965-01-31', '1965-02-28', '1965-03-31', '1965-04-30',
+           '1965-05-31', '1965-06-30', '1965-07-31', '1965-08-31',
+           '1965-09-30', '1965-10-31', '1965-11-30', '1965-12-31',
+           '1966-01-31', '1966-02-28', '1966-03-31', '1966-04-30',
+           '1966-05-31', '1966-06-30', '1966-07-31', '1966-08-31',
+           '1966-09-30', '1966-10-31', '1966-11-30', '1966-12-31',
+           '1967-01-31', '1967-02-28', '1967-03-31', '1967-04-30',
+           '1967-05-31', '1967-06-30', '1967-07-31', '1967-08-31',
+           '1967-09-30', '1967-10-31', '1967-11-30', '1967-12-31',
+           '1968-01-31', '1968-02-29', '1968-03-31', '1968-04-30',
+           '1968-05-31', '1968-06-30', '1968-07-31', '1968-08-31',
+           '1968-09-30', '1968-10-31', '1968-11-30', '1968-12-31',
+           '1969-01-31', '1969-02-28', '1969-03-31', '1969-04-30',
+           '1969-05-31', '1969-06-30', '1969-07-31', '1969-08-31',
+           '1969-09-30', '1969-10-31', '1969-11-30', '1969-12-31',
+           '1970-01-31', '1970-02-28', '1970-03-31', '1970-04-30',
+           '1970-05-31', '1970-06-30', '1970-07-31', '1970-08-31',
+           '1970-09-30', '1970-10-31', '1970-11-30', '1970-12-31',
+           '1971-01-31', '1971-02-28', '1971-03-31', '1971-04-30',
+           '1971-05-31', '1971-06-30', '1971-07-31', '1971-08-31',
+           '1971-09-30', '1971-10-31', '1971-11-30', '1971-12-31',
+           '1972-01-31', '1972-02-29', '1972-03-31', '1972-04-30',
+           '1972-05-31', '1972-06-30', '1972-07-31', '1972-08-31',
+           '1972-09-30', '1972-10-31', '1972-11-30', '1972-12-31',
+           '1973-01-31', '1973-02-28', '1973-03-31', '1973-04-30',
+           '1973-05-31', '1973-06-30', '1973-07-31', '1973-08-31',
+           '1973-09-30', '1973-10-31', '1973-11-30', '1973-12-31',
+           '1974-01-31', '1974-02-28', '1974-03-31', '1974-04-30',
+           '1974-05-31', '1974-06-30', '1974-07-31', '1974-08-31',
+           '1974-09-30', '1974-10-31', '1974-11-30', '1974-12-31',
+           '1975-01-31', '1975-02-28', '1975-03-31', '1975-04-30',
+           '1975-05-31', '1975-06-30', '1975-07-31', '1975-08-31',
+           '1975-09-30', '1975-10-31', '1975-11-30', '1975-12-31',
+           '1976-01-31', '1976-02-29', '1976-03-31', '1976-04-30',
+           '1976-05-31', '1976-06-30', '1976-07-31', '1976-08-31',
+           '1976-09-30', '1976-10-31', '1976-11-30', '1976-12-31',
+           '1977-01-31', '1977-02-28', '1977-03-31', '1977-04-30',
+           '1977-05-31', '1977-06-30', '1977-07-31', '1977-08-31',
+           '1977-09-30', '1977-10-31', '1977-11-30', '1977-12-31',
+           '1978-01-31', '1978-02-28', '1978-03-31', '1978-04-30',
+           '1978-05-31', '1978-06-30', '1978-07-31', '1978-08-31',
+           '1978-09-30', '1978-10-31', '1978-11-30', '1978-12-31',
+           '1979-01-31', '1979-02-28', '1979-03-31', '1979-04-30',
+           '1979-05-31', '1979-06-30', '1979-07-31', '1979-08-31',
+           '1979-09-30', '1979-10-31', '1979-11-30', '1979-12-31',
+           '1980-01-31', '1980-02-29', '1980-03-31', '1980-04-30',
+           '1980-05-31', '1980-06-30', '1980-07-31', '1980-08-31',
+           '1980-09-30', '1980-10-31', '1980-11-30', '1980-12-31',
+           '1981-01-31', '1981-02-28', '1981-03-31', '1981-04-30',
+           '1981-05-31', '1981-06-30', '1981-07-31', '1981-08-31',
+           '1981-09-30', '1981-10-31', '1981-11-30', '1981-12-31',
+           '1982-01-31', '1982-02-28', '1982-03-31', '1982-04-30',
+           '1982-05-31', '1982-06-30', '1982-07-31', '1982-08-31',
+           '1982-09-30', '1982-10-31', '1982-11-30', '1982-12-31',
+           '1983-01-31', '1983-02-28', '1983-03-31', '1983-04-30',
+           '1983-05-31', '1983-06-30', '1983-07-31', '1983-08-31',
+           '1983-09-30', '1983-10-31', '1983-11-30', '1983-12-31',
+           '1984-01-31', '1984-02-29', '1984-03-31', '1984-04-30',
+           '1984-05-31', '1984-06-30', '1984-07-31', '1984-08-31',
+           '1984-09-30', '1984-10-31', '1984-11-30', '1984-12-31',
+           '1985-01-31', '1985-02-28', '1985-03-31', '1985-04-30',
+           '1985-05-31', '1985-06-30', '1985-07-31', '1985-08-31',
+           '1985-09-30', '1985-10-31', '1985-11-30', '1985-12-31',
+           '1986-01-31', '1986-02-28', '1986-03-31', '1986-04-30',
+           '1986-05-31', '1986-06-30', '1986-07-31', '1986-08-31',
+           '1986-09-30', '1986-10-31', '1986-11-30', '1986-12-31',
+           '1987-01-31', '1987-02-28', '1987-03-31', '1987-04-30',
+           '1987-05-31', '1987-06-30', '1987-07-31', '1987-08-31',
+           '1987-09-30', '1987-10-31', '1987-11-30', '1987-12-31',
+           '1988-01-31', '1988-02-29', '1988-03-31', '1988-04-30',
+           '1988-05-31', '1988-06-30', '1988-07-31', '1988-08-31',
+           '1988-09-30', '1988-10-31', '1988-11-30', '1988-12-31',
+           '1989-01-31', '1989-02-28', '1989-03-31', '1989-04-30',
+           '1989-05-31', '1989-06-30', '1989-07-31', '1989-08-31',
+           '1989-09-30', '1989-10-31', '1989-11-30', '1989-12-31',
+           '1990-01-31', '1990-02-28', '1990-03-31', '1990-04-30',
+           '1990-05-31', '1990-06-30', '1990-07-31', '1990-08-31',
+           '1990-09-30', '1990-10-31', '1990-11-30', '1990-12-31',
+           '1991-01-31', '1991-02-28', '1991-03-31', '1991-04-30',
+           '1991-05-31', '1991-06-30', '1991-07-31', '1991-08-31',
+           '1991-09-30', '1991-10-31', '1991-11-30', '1991-12-31',
+           '1992-01-31', '1992-02-29', '1992-03-31', '1992-04-30',
+           '1992-05-31', '1992-06-30', '1992-07-31', '1992-08-31',
+           '1992-09-30', '1992-10-31', '1992-11-30', '1992-12-31',
+           '1993-01-31', '1993-02-28', '1993-03-31', '1993-04-30',
+           '1993-05-31', '1993-06-30', '1993-07-31', '1993-08-31',
+           '1993-09-30', '1993-10-31', '1993-11-30', '1993-12-31',
+           '1994-01-31', '1994-02-28', '1994-03-31', '1994-04-30',
+           '1994-05-31', '1994-06-30', '1994-07-31', '1994-08-31',
+           '1994-09-30', '1994-10-31', '1994-11-30', '1994-12-31',
+           '1995-01-31', '1995-02-28', '1995-03-31', '1995-04-30',
+           '1995-05-31', '1995-06-30', '1995-07-31', '1995-08-31',
+           '1995-09-30', '1995-10-31', '1995-11-30', '1995-12-31',
+           '1996-01-31', '1996-02-29', '1996-03-31', '1996-04-30',
+           '1996-05-31', '1996-06-30', '1996-07-31', '1996-08-31',
+           '1996-09-30', '1996-10-31', '1996-11-30', '1996-12-31',
+           '1997-01-31', '1997-02-28', '1997-03-31', '1997-04-30',
+           '1997-05-31', '1997-06-30', '1997-07-31', '1997-08-31',
+           '1997-09-30', '1997-10-31', '1997-11-30', '1997-12-31',
+           '1998-01-31', '1998-02-28', '1998-03-31', '1998-04-30',
+           '1998-05-31', '1998-06-30', '1998-07-31', '1998-08-31',
+           '1998-09-30', '1998-10-31', '1998-11-30', '1998-12-31',
+           '1999-01-31', '1999-02-28', '1999-03-31', '1999-04-30',
+           '1999-05-31', '1999-06-30', '1999-07-31', '1999-08-31',
+           '1999-09-30', '1999-10-31', '1999-11-30', '1999-12-31',
+           '2000-01-31', '2000-02-29', '2000-03-31', '2000-04-30',
+           '2000-05-31', '2000-06-30', '2000-07-31', '2000-08-31',
+           '2000-09-30', '2000-10-31', '2000-11-30', '2000-12-31',
+           '2001-01-31', '2001-02-28', '2001-03-31', '2001-04-30',
+           '2001-05-31', '2001-06-30', '2001-07-31', '2001-08-31',
+           '2001-09-30', '2001-10-31', '2001-11-30', '2001-12-31',
+           '2002-01-31', '2002-02-28', '2002-03-31', '2002-04-30',
+           '2002-05-31', '2002-06-30', '2002-07-31', '2002-08-31',
+           '2002-09-30', '2002-10-31', '2002-11-30', '2002-12-31',
+           '2003-01-31', '2003-02-28', '2003-03-31', '2003-04-30',
+           '2003-05-31', '2003-06-30', '2003-07-31', '2003-08-31',
+           '2003-09-30', '2003-10-31', '2003-11-30', '2003-12-31',
+           '2004-01-31', '2004-02-29', '2004-03-31', '2004-04-30',
+           '2004-05-31', '2004-06-30', '2004-07-31', '2004-08-31',
+           '2004-09-30', '2004-10-31', '2004-11-30', '2004-12-31',
+           '2005-01-31', '2005-02-28', '2005-03-31', '2005-04-30',
+           '2005-05-31', '2005-06-30', '2005-07-31', '2005-08-31',
+           '2005-09-30', '2005-10-31', '2005-11-30', '2005-12-31',
+           '2006-01-31', '2006-02-28', '2006-03-31', '2006-04-30',
+           '2006-05-31', '2006-06-30', '2006-07-31', '2006-08-31',
+           '2006-09-30', '2006-10-31', '2006-11-30', '2006-12-31',
+           '2007-01-31', '2007-02-28', '2007-03-31', '2007-04-30',
+           '2007-05-31', '2007-06-30', '2007-07-31', '2007-08-31',
+           '2007-09-30', '2007-10-31', '2007-11-30', '2007-12-31',
+           '2008-01-31', '2008-02-29', '2008-03-31', '2008-04-30',
+           '2008-05-31', '2008-06-30', '2008-07-31', '2008-08-31',
+           '2008-09-30', '2008-10-31', '2008-11-30', '2008-12-31',
+           '2009-01-31', '2009-02-28', '2009-03-31', '2009-04-30',
+           '2009-05-31', '2009-06-30', '2009-07-31', '2009-08-31',
+           '2009-09-30', '2009-10-31', '2009-11-30', '2009-12-31',
+           '2010-01-31', '2010-02-28', '2010-03-31', '2010-04-30',
+           '2010-05-31', '2010-06-30', '2010-07-31', '2010-08-31',
+           '2010-09-30', '2010-10-31', '2010-11-30', '2010-12-31',
+           '2011-01-31', '2011-02-28', '2011-03-31', '2011-04-30',
+           '2011-05-31', '2011-06-30', '2011-07-31', '2011-08-31',
+           '2011-09-30', '2011-10-31', '2011-11-30', '2011-12-31',
+           '2012-01-31', '2012-02-29', '2012-03-31', '2012-04-30',
+           '2012-05-31', '2012-06-30', '2012-07-31', '2012-08-31',
+           '2012-09-30', '2012-10-31', '2012-11-30', '2012-12-31',
+           '2013-01-31', '2013-02-28', '2013-03-31', '2013-04-30',
+           '2013-05-31', '2013-06-30', '2013-07-31', '2013-08-31',
+           '2013-09-30', '2013-10-31', '2013-11-30', '2013-12-31',
+           '2014-01-31', '2014-02-28', '2014-03-31', '2014-04-30',
+           '2014-05-31', '2014-06-30', '2014-07-31', '2014-08-31',
+           '2014-09-30', '2014-10-31', '2014-11-30', '2014-12-31',
+           '2015-01-31', '2015-02-28', '2015-03-31', '2015-04-30',
+           '2015-05-31', '2015-06-30', '2015-07-31', '2015-08-31',
+           '2015-09-30', '2015-10-31', '2015-11-30', '2015-12-31',
+           '2016-01-31', '2016-02-29', '2016-03-31', '2016-04-30',
+           '2016-05-31', '2016-06-30', '2016-07-31', '2016-08-31',
+           '2016-09-30', '2016-10-31', '2016-11-30', '2016-12-31',
+           '2017-01-31', '2017-02-28', '2017-03-31', '2017-04-30',
+           '2017-05-31', '2017-06-30', '2017-07-31', '2017-08-31',
+           '2017-09-30', '2017-10-31', '2017-11-30', '2017-12-31',
+           '2018-01-31', '2018-02-28', '2018-03-31', '2018-04-30',
+           '2018-05-31', '2018-06-30', '2018-07-31', '2018-08-31',
+           '2018-09-30', '2018-10-31', '2018-11-30', '2018-12-31',
+           '2019-01-31', '2019-02-28', '2019-03-31', '2019-04-30',
+           '2019-05-31', '2019-06-30', '2019-07-31', '2019-08-31',
+           '2019-09-30', '2019-10-31', '2019-11-30', '2019-12-31',
+           '2020-01-31', '2020-02-29', '2020-03-31', '2020-04-30',
+           '2020-05-31', '2020-06-30', '2020-07-31', '2020-08-31',
+           '2020-09-30', '2020-10-31', '2020-11-30', '2020-12-31',
+           '2021-01-31'], dtype='datetime64[D]')
+
+
+
+
+```
+money_supply_date = money_supply['DateTime'].to_numpy().astype('datetime64[D]')
+money_supply_value = money_supply['Value'].to_numpy()
+btc_usd_date = btc_usd['Date'].to_numpy().astype('datetime64[D]')
+btc_usd_close = btc_usd['Close'].to_numpy()
+
+plt.plot(btc_usd_date, btc_usd_close)
+plt.plot(money_supply_date, money_supply_value)
+
+plt.show()
+```
+
+
+    
+![png](output_64_0.png)
+    
+
+
+Что скажете про такой график? :)
+
+Красиво? :) Репрезентативно? :)
+
+### Улучшение и оптимизация графиков
+
+Итак, представляем вашему вниманию 10 в меру абстрактных шагов, которые помогут значительно улучшить ваши визуализации и проапгрейдить ваш скилл в Matplotlib
+
+1. Вносите ясность — что вообще изображено?
+2. Сравнивайте — располагаем связанную информацию рядом
+3. Упрощайте — действительно ли нужны все точки, чтобы передать сообщение?
+4. Фокусируйте внимание — нужен ли весь диапазон значений, имеет ли это смысл?
+5. Поощряйте вопросы — можно выделить интересные ответы на возникающие вопросы прямо на графике
+6. Пытайтесь ответить на вопрос “почему” — из графика должна в идеале быть понятно мысль без каких-либо комментариев
+7. Оставляйте возможность валидировать визуализацию — можно оставить у нескольких точек подписи значений
+8. Делайте разные визуализации — нет универсального типа визуализации, ищите то, что подходит лучше всего
+9. Здоровый скептицизм — приводите референсы, ссылки. Спрашивайте других людей понятно или им что-то из графика
+10. Детализируйте — самые интересные моменты, возможно, стоит рассмотреть отдельно
+
+
+Ну что же, будем исправлять наш график по порядку, по шагам. Будем отмечать плюсиком, что добавили/исправили, чтобы нагляднее отслеживать все изменения.
+
+
+```
+# 1
+plt.figure(figsize=(16,9)) # +
+
+plt.plot(btc_usd_date, btc_usd_close)
+plt.plot(money_supply_date, money_supply_value)
+
+plt.title("Валютные интервенции и стоимость биткоина USD") # +
+
+plt.show()
+```
+
+
+    
+![png](output_70_0.png)
+    
+
+
+
+```
+# 1-2
+# Для того, чтобы использовать парные оси y, перейдем к объектной форме
+fig, ax1 = plt.subplots(figsize=(16,9))  # +
+
+color = 'tab:blue' # +
+ax1.set_xlabel('Время')  # +
+ax1.set_ylabel('BTC/USD цена, $', color = color)  # +
+ax1.plot(btc_usd_date, btc_usd_close, color = color) # +
+ax1.tick_params(axis ='y', labelcolor = color)  # +
+
+# Правая ось y будет для валютных интервенций
+ax2 = ax1.twinx() # +
+
+color = 'tab:purple' # +
+ax2.set_ylabel('Объем валютных интервенций, млн $', color = color)  # +
+ax2.plot(money_supply_date, money_supply_value, color = color)  # +
+ax2.tick_params(axis ='y', labelcolor = color) # +
+
+plt.title("Валютные интервенции и стоимость биткоина USD")
+
+plt.show()
+```
+
+
+    
+![png](output_71_0.png)
+    
+
+
+
+```
+# 3-4
+fig, ax1 = plt.subplots(figsize=(16,9))
+
+color = 'tab:blue'
+ax1.set_xlabel('Время')
+max_date = np.max(np.concatenate([btc_usd_date, money_supply_date])) # +
+ax1.set_xlim(left=np.datetime64('2014-01-01'), right=max_date) # +
+ax1.set_ylabel('BTC/USD цена, $', color = color)
+ax1.plot(btc_usd_date, btc_usd_close, color = color)
+ax1.tick_params(axis ='y', labelcolor = color)
+
+ax2 = ax1.twinx()
+
+color = 'tab:purple'
+ax2.set_ylabel('Объем валютных интервенций, млн $', color = color)
+ax2.plot(money_supply_date, money_supply_value, color = color)
+ax2.tick_params(axis ='y', labelcolor = color)
+
+plt.title("Валютные интервенции и стоимость биткоина USD")
+
+plt.show()
+```
+
+
+    
+![png](output_72_0.png)
+    
+
+
+
+```
+# 5-6
+fig, ax1 = plt.subplots(figsize=(16,9))
+
+color = 'tab:blue'
+ax1.set_xlabel('Время')
+max_date = np.max(np.concatenate([btc_usd_date, money_supply_date]))
+ax1.set_xlim(left=np.datetime64('2014-01-01'), right=max_date)
+ax1.set_ylabel('BTC/USD цена, $', color = color)
+ax1.plot(btc_usd_date, btc_usd_close, color = color)
+ax1.tick_params(axis ='y', labelcolor = color)
+
+ax2 = ax1.twinx()
+
+color = 'tab:purple'
+ax2.set_ylabel('Объем валютных интервенций, млн $', color = color)
+ax2.plot(money_supply_date, money_supply_value, color = color)
+ax2.tick_params(axis ='y', labelcolor = color)
+
+plt.title("Валютные интервенции и стоимость биткоина USD")
+plt.text(np.datetime64('2020-04-09'), 3.2e6, '$2.3 trillion pump', bbox=dict(facecolor='purple', alpha=0.5), fontsize=12) # +
+
+plt.show()
+```
+
+
+    
+![png](output_73_0.png)
+    
+
+
+
+```
+# index of value for this date
+np.argwhere(money_supply_date == np.datetime64('2020-03-31')).flatten()
+money_supply_value[np.argwhere(money_supply_date == np.datetime64('2020-03-31')).flatten()]
+```
+
+
+
+
+    array([3883155])
+
+
+
+
+```
+money_supply_value[np.argwhere(money_supply_date == np.datetime64('2020-06-30')).flatten()]
+```
+
+
+
+
+    array([5001978])
+
+
+
+
+```
+# 7
+def get_point_for_dt(date_arr: np.ndarray, value_arr: np.ndarray, dt: str): # +
+  return value_arr[np.argwhere(date_arr == np.datetime64(dt)).flatten()] # +
+
+
+fig, ax1 = plt.subplots(figsize=(16,9))
+
+color = 'tab:blue'
+ax1.set_xlabel('Время')
+max_date = np.max(np.concatenate([btc_usd_date, money_supply_date]))
+ax1.set_xlim(left=np.datetime64('2014-01-01'), right=max_date)
+ax1.set_ylabel('BTC/USD цена, $', color = color)
+ax1.plot(btc_usd_date, btc_usd_close, color = color)
+ax1.tick_params(axis ='y', labelcolor = color)
+
+# Правая ось y будет для валютных интервенций
+ax2 = ax1.twinx()
+
+color = 'tab:purple'
+ax2.set_ylabel('Объем валютных интервенций, млн $', color = color)
+ax2.plot(money_supply_date, money_supply_value, color = color)
+ax2.scatter([np.datetime64('2020-02-29'), ], get_point_for_dt(money_supply_date, money_supply_value, '2020-02-29'), color=color) # +
+ax2.scatter([np.datetime64('2020-05-31'), ], get_point_for_dt(money_supply_date, money_supply_value, '2020-05-31'), color=color) # +
+ax2.tick_params(axis ='y', labelcolor = color)
+
+plt.title("Валютные интервенции и стоимость биткоина USD")
+plt.text(np.datetime64('2020-04-09'), 3.2e6, '$2.3 trillion pump', bbox=dict(facecolor='purple', alpha=0.5), fontsize=12)
+plt.text(np.datetime64('2019-09-25'), # +
+         3.5e6, f"{get_point_for_dt(money_supply_date, money_supply_value, '2020-02-29')[0]}",  # +
+         fontsize=12) # +
+
+plt.text(np.datetime64('2019-12-15'), # +
+         5.1e6, f"{get_point_for_dt(money_supply_date, money_supply_value, '2020-05-31')[0]}", # +
+         fontsize=12) # +
+
+plt.text(money_supply_date[list(money_supply_value).index(max(money_supply_value))], # +
+         max(money_supply_value), f"{get_point_for_dt(money_supply_date, money_supply_value, money_supply_date[list(money_supply_value).index(max(money_supply_value))])[0]}",  # +
+         fontsize=12) # +
+
+plt.show()
+```
+
+
+    
+![png](output_76_0.png)
+    
+
+
+И на слайд с графиком можно приложить ссылку "на почитать".
+
+https://www.nytimes.com/2020/04/09/business/economy/fed-economic-rescue-coronavirus.html
+
+Не забудем про то, что корреляция, конечно, не означает причинно-следственную связь:)
+
+Но в целях выдвижения каких-то первичных гипотез и формирования выводов — наш обновленный график уж явно будет поприятнее :))

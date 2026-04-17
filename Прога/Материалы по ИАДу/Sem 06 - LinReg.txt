@@ -1,0 +1,1514 @@
+Источник: Sem 06 - LinReg.ipynb
+
+---
+
+# Интеллектуальный анализ данных, БИ
+
+## НИУ ВШЭ, 2025-26 учебный год
+
+# Семинар 6. Линейная регрессия. Функции потерь
+
+## Вступление
+Сегодня мы продолжим обсуждать предобработку данных, добавив к ней генерацию новых признаков. Потом обсудим различные функции потерь для линейной регрессии, визуально сравним их. Ну и закончим тем, чего все давно ждали: познакомимся подробнее с интерфейсами линейных моделей и методов отбора признаков в sklearn, обучим ряд линейных моделей.
+
+### План семинара
+1. Предоработка данных
+    - Заполнение пропусков
+    - Преобразование нечисловых признаков
+    - Масштабирование
+    - Генерация новых признаков
+2. Имплементация и визуализация функций потерь для регрессии
+    - MSE, RMSE, R2 score
+    - MAE
+    - Huber Loss
+    - Logarithmic Loss
+    - Quantile Loss
+3. Обучение линейных моделей и отбор признаков
+
+## 1. Предоработка данных
+Для демонстраций загрузим набор данных [Automobile Data Set](https://archive.ics.uci.edu/ml/datasets/Automobile). В данных присутствуют категориальные, целочисленные и вещественнозначные признаки.
+
+
+```python
+import warnings
+
+import matplotlib
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import MinMaxScaler
+
+warnings.filterwarnings("ignore")
+
+%matplotlib inline
+plt.rcParams["figure.figsize"] = (12, 8)
+```
+
+
+```python
+X_raw = pd.read_csv(
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/autos/imports-85.data",
+    header=None,
+    na_values=["?"],
+)
+
+y = X_raw[25]
+X_raw = X_raw.drop(25, axis=1)
+
+X_raw.head()
+```
+
+
+
+
+
+  <div id="df-38ddb92a-29b8-471e-9ae2-0f3bc26eef11" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>15</th>
+      <th>16</th>
+      <th>17</th>
+      <th>18</th>
+      <th>19</th>
+      <th>20</th>
+      <th>21</th>
+      <th>22</th>
+      <th>23</th>
+      <th>24</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>NaN</td>
+      <td>alfa-romero</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>two</td>
+      <td>convertible</td>
+      <td>rwd</td>
+      <td>front</td>
+      <td>88.6</td>
+      <td>...</td>
+      <td>four</td>
+      <td>130</td>
+      <td>mpfi</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111.0</td>
+      <td>5000.0</td>
+      <td>21</td>
+      <td>27</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3</td>
+      <td>NaN</td>
+      <td>alfa-romero</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>two</td>
+      <td>convertible</td>
+      <td>rwd</td>
+      <td>front</td>
+      <td>88.6</td>
+      <td>...</td>
+      <td>four</td>
+      <td>130</td>
+      <td>mpfi</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111.0</td>
+      <td>5000.0</td>
+      <td>21</td>
+      <td>27</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>NaN</td>
+      <td>alfa-romero</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>two</td>
+      <td>hatchback</td>
+      <td>rwd</td>
+      <td>front</td>
+      <td>94.5</td>
+      <td>...</td>
+      <td>six</td>
+      <td>152</td>
+      <td>mpfi</td>
+      <td>2.68</td>
+      <td>3.47</td>
+      <td>9.0</td>
+      <td>154.0</td>
+      <td>5000.0</td>
+      <td>19</td>
+      <td>26</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2</td>
+      <td>164.0</td>
+      <td>audi</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>four</td>
+      <td>sedan</td>
+      <td>fwd</td>
+      <td>front</td>
+      <td>99.8</td>
+      <td>...</td>
+      <td>four</td>
+      <td>109</td>
+      <td>mpfi</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>10.0</td>
+      <td>102.0</td>
+      <td>5500.0</td>
+      <td>24</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2</td>
+      <td>164.0</td>
+      <td>audi</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>four</td>
+      <td>sedan</td>
+      <td>4wd</td>
+      <td>front</td>
+      <td>99.4</td>
+      <td>...</td>
+      <td>five</td>
+      <td>136</td>
+      <td>mpfi</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>8.0</td>
+      <td>115.0</td>
+      <td>5500.0</td>
+      <td>18</td>
+      <td>22</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 25 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-38ddb92a-29b8-471e-9ae2-0f3bc26eef11')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-38ddb92a-29b8-471e-9ae2-0f3bc26eef11 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-38ddb92a-29b8-471e-9ae2-0f3bc26eef11');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+    </div>
+  </div>
+
+
+
+
+#### Заполним пропуски средними и пустыми строками
+
+
+```python
+# создаем маску, указывающую на столбцы с категориальными признаками
+cat_features_mask = (X_raw.dtypes == "object").values
+
+# для вещественнозначных признаков заполним пропуски средними
+X_real = X_raw[X_raw.columns[~cat_features_mask]]
+mis_replacer = SimpleImputer(strategy="mean")
+X_no_mis_real = pd.DataFrame(
+    data=mis_replacer.fit_transform(X_real), columns=X_real.columns
+)
+
+# для категориальных — пустыми строками
+X_cat = X_raw[X_raw.columns[cat_features_mask]].fillna("")
+X_no_mis = pd.concat([X_no_mis_real, X_cat], axis=1)
+```
+
+#### Преобразуем нечисловые признаки при помощи one-hot encoding
+
+
+```python
+X_dum = pd.get_dummies(X_no_mis, drop_first=True)
+print(f"Data shape: {X_dum.shape}")
+X_dum.head()
+```
+
+    Data shape: (205, 66)
+    
+
+
+
+
+
+  <div id="df-8432365a-49bd-42cd-9c94-bc0cd48cae9c" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>16</th>
+      <th>18</th>
+      <th>19</th>
+      <th>...</th>
+      <th>15_three</th>
+      <th>15_twelve</th>
+      <th>15_two</th>
+      <th>17_2bbl</th>
+      <th>17_4bbl</th>
+      <th>17_idi</th>
+      <th>17_mfi</th>
+      <th>17_mpfi</th>
+      <th>17_spdi</th>
+      <th>17_spfi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3.0</td>
+      <td>122.0</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548.0</td>
+      <td>130.0</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>...</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3.0</td>
+      <td>122.0</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548.0</td>
+      <td>130.0</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>...</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>122.0</td>
+      <td>94.5</td>
+      <td>171.2</td>
+      <td>65.5</td>
+      <td>52.4</td>
+      <td>2823.0</td>
+      <td>152.0</td>
+      <td>2.68</td>
+      <td>3.47</td>
+      <td>...</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2.0</td>
+      <td>164.0</td>
+      <td>99.8</td>
+      <td>176.6</td>
+      <td>66.2</td>
+      <td>54.3</td>
+      <td>2337.0</td>
+      <td>109.0</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>...</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2.0</td>
+      <td>164.0</td>
+      <td>99.4</td>
+      <td>176.6</td>
+      <td>66.4</td>
+      <td>54.3</td>
+      <td>2824.0</td>
+      <td>136.0</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>...</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>False</td>
+      <td>True</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 66 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-8432365a-49bd-42cd-9c94-bc0cd48cae9c')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-8432365a-49bd-42cd-9c94-bc0cd48cae9c button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-8432365a-49bd-42cd-9c94-bc0cd48cae9c');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+    </div>
+  </div>
+
+
+
+
+#### Отмасштабируем признаки MinMaxScaler'ом
+
+
+```python
+X_dum.columns = X_dum.columns.astype(str)
+normalizer = MinMaxScaler()
+X_real_norm_np = normalizer.fit_transform(X_dum)
+X = pd.DataFrame(data=X_real_norm_np)
+X.head()
+```
+
+
+
+
+
+  <div id="df-42d92b52-0151-45b1-8f92-346ce25b6e3a" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>56</th>
+      <th>57</th>
+      <th>58</th>
+      <th>59</th>
+      <th>60</th>
+      <th>61</th>
+      <th>62</th>
+      <th>63</th>
+      <th>64</th>
+      <th>65</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>0.298429</td>
+      <td>0.058309</td>
+      <td>0.413433</td>
+      <td>0.316667</td>
+      <td>0.083333</td>
+      <td>0.411171</td>
+      <td>0.260377</td>
+      <td>0.664286</td>
+      <td>0.290476</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>0.298429</td>
+      <td>0.058309</td>
+      <td>0.413433</td>
+      <td>0.316667</td>
+      <td>0.083333</td>
+      <td>0.411171</td>
+      <td>0.260377</td>
+      <td>0.664286</td>
+      <td>0.290476</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.6</td>
+      <td>0.298429</td>
+      <td>0.230321</td>
+      <td>0.449254</td>
+      <td>0.433333</td>
+      <td>0.383333</td>
+      <td>0.517843</td>
+      <td>0.343396</td>
+      <td>0.100000</td>
+      <td>0.666667</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0.8</td>
+      <td>0.518325</td>
+      <td>0.384840</td>
+      <td>0.529851</td>
+      <td>0.491667</td>
+      <td>0.541667</td>
+      <td>0.329325</td>
+      <td>0.181132</td>
+      <td>0.464286</td>
+      <td>0.633333</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0.8</td>
+      <td>0.518325</td>
+      <td>0.373178</td>
+      <td>0.529851</td>
+      <td>0.508333</td>
+      <td>0.541667</td>
+      <td>0.518231</td>
+      <td>0.283019</td>
+      <td>0.464286</td>
+      <td>0.633333</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 66 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-42d92b52-0151-45b1-8f92-346ce25b6e3a')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-42d92b52-0151-45b1-8f92-346ce25b6e3a button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-42d92b52-0151-45b1-8f92-346ce25b6e3a');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+    </div>
+  </div>
+
+
+
+
+#### Сгенерируем новые признаки
+Особенно важным моментом для линейной регрессии является нелинейное преобразование признаков. Это позволяет использовать линейную регрессию для моделирования нелинейных зависимостей.
+
+Наиболее популярны такие преобразования:
+- добавление полиномиальных признаков (`PolynomialFeatures` в sklearn)
+- взятие логарифма признака
+- взятие квадратного корня
+- применение тригонометрических функций
+
+Делать добавление признаков нужно с умом: большое количество полиномиальных и прочих новых признаков может сильно раздуть размер таблицы с данными, что может негативно сказаться на скорости и качестве моделирования.
+
+Небольшой пример. Посмотрев на наши данные, мы можем заметить, что зависимость целевой переменной от шестого признака скорее квадратичная, чем линейная:
+
+
+```python
+plt.scatter(X[6], y)
+plt.show();
+```
+
+
+    
+![png](output_12_0.png)
+    
+
+
+
+```python
+plt.scatter(X[6] ** 2, y)
+plt.show();
+```
+
+
+    
+![png](output_13_0.png)
+    
+
+
+А для признака номер 13 линеаризовать зависимость получается с помощью функции $\frac 1 {\sqrt{x}}$:
+
+
+```python
+plt.scatter(X[13], y)
+plt.show();
+```
+
+
+    
+![png](output_15_0.png)
+    
+
+
+
+```python
+plt.scatter(1 / np.sqrt(X[13]), y)
+plt.show();
+```
+
+
+    
+![png](output_16_0.png)
+    
+
+
+## 2. Имплементация и визуализация функций потерь для регрессии
+
+Функционал качества в задачах обучения с учителем обычно задается в виде среднего по объектам выборки:
+$$Q(a) = \frac 1 \ell \sum_{i=1}^\ell L(y_i, a(x_i)),$$
+где $L(\cdot, \cdot)$ - функция потерь, задающая штраф за разницу между предсказанием и истинным значением целевого признака. Свойства функции потерь:
+* $L(y_i, a(x_i)) \geqslant 0$;
+* $L(y_i, y_i) = 0$.
+
+Функционал качества должен в первую очередь отвечать требованиям заказчика, при этом математические свойства функции потерь могут быть неудобны для оптимизации.
+
+__Пример:__ если мы не различаем маленькие ошибки (между 0.01 и 0.1 нет особой разницы), но зато не хотим получать большие ошибки, можно использовать следующую функцию потерь:
+
+$$L(y_i, a(x_i)) = [| y_i - a(x_i) | > \varepsilon],$$ $\varepsilon$ — допустимая разница между предсказанием и фактом.
+
+### MSE, RMSE, R2 score
+Кроме требований заказчика, функционал качества должен учитывать математические особенности модели, например, устойчивость к шумовым объектам.
+
+В линейной регрессии Mean Squared Error: $L(y_i, a(x_i)) = (a(x_i) - y_i)^2$ не обладает этим свойством, потому что задает очень большие штрафы за большие отклонения от фактического значения.
+
+$$MSE (a, X, Y) = \frac 1 \ell \sum^\ell _{i=1}(a(x_i) - y_i)^2$$
+
+Рассмотрим это явление на примере. Выберем один признак, от которого целевой признак (имеющий индекс 15 в матрице X) зависит практически линейно. Добавим к выборке два объекта-выброса и посмотрим, как изменится оптимизированная на MSE прямая.
+
+
+
+```python
+X_subset = X[[7, 15]].values
+X_subset_modified = np.vstack(
+    (X_subset, [[1, 90], [2, 50]])
+)  # добавление двух шумовых точек
+```
+
+
+```python
+def scatter_points_and_plot_line_MSE(
+    X_subset: np.array, ax: matplotlib.axes._axes.Axes
+) -> None:
+    # визуализируем точки
+    ax.scatter(X_subset[:, 0], X_subset[:, 1])
+
+    # обучим линейную модель
+    lr = LinearRegression()
+    lr.fit(X_subset[:, 0][:, np.newaxis], X_subset[:, 1])
+
+    # визуализируем прямую
+    grid = np.linspace(0, 2, 100)
+    line = lr.predict(grid[:, np.newaxis])
+    ax.plot(grid, line)
+    ax.set_ylim(-20, 100)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+```
+
+
+```python
+_, ax = plt.subplots(1, 2, figsize=(20, 5))
+ax[0].set_title("MSE without outliers")
+scatter_points_and_plot_line_MSE(X_subset, ax[0])
+ax[1].set_title("MSE with outliers")
+scatter_points_and_plot_line_MSE(X_subset_modified, ax[1])
+plt.show();
+```
+
+
+    
+![png](output_20_0.png)
+    
+
+
+**Задание.** Реализуйте функцию для подсчета MSE с использованием numpy.
+
+
+```python
+def MSE(y: np.array, y_pred: np.array) -> np.float64:
+    # <YOUR CODE HERE>
+
+
+a = np.array([11, 20, 19, 17, 10])
+pred = np.array([12, 18, 19.5, 18, 9])
+mse = MSE(y=a, y_pred=pred)
+print(f"Mean Square Error is: {mse}")
+assert mse == 1.45
+```
+
+Среднеквадратичная ошибка подходит для сравнения двух моделей или для контроля качества во время обучения. Из-за того, разница возводится в квадрат, сложно дать этому числу интерпретацию. Для лучшей интерпретации используется Root Mean Square Error (RMSE): её значение имеет те же масштабы, что и целевая переменная.
+$$RMSE (a, X, Y) = \sqrt{MSE (a, X, Y)} = \sqrt{\frac 1 \ell \sum^\ell _{i=1}(a(x_i) - y_i)^2}$$
+
+**Задание.** Реализуйте функцию для подсчета RMSE с использованием numpy.
+
+
+```python
+def RMSE(y: np.array, y_pred: np.array) -> np.float64:
+    # <YOUR CODE HERE>
+
+
+rmse = RMSE(y=a, y_pred=pred)
+print(f"Root Mean Square Error is: {rmse}")
+assert rmse == 1.2041594578792296
+```
+
+Коэффициент детерминации $R^2$ показывает долю дисперсии в целевой переменной, которая объяснена зависимыми переменными. $R^2$ можно интерпретировать как некоторого рода нормированное MSE.
+
+$$R^2(a, X, Y) = 1 - \frac {\sum^\ell_{i=1}(a(x_i) - y_i)^2}{\sum^\ell _{i=1}(y_i - \bar{y})^2}$$
+
+- Если $R^2 < 0$, значит наша модель даёт предсказание хуже константы в виде среднего значения целевой переменной, то есть абсолютно бесполезна с точки зрения MSE.
+- Если $R^2 = 0$, значит мы предсказываем не лучше и не хуже константы в виде среднего значения целевой переменной.
+- Если $0 < R^2 < 1$, значит модель работает лучше константного предсказания с точки зрения MSE.
+- Если $R^2 = 1$, значит ошибка MSE равна нулю. Это может произойти, например, при полном переобучении на тренировочной части выборки.
+
+**Задание.** Реализуйте функцию для подсчета $R^2$ с использованием numpy.
+
+
+```python
+def R_squared(y: np.array, y_pred: np.array) -> np.float64:
+    # <YOUR CODE HERE>
+
+
+r_squared = R_squared(y=a, y_pred=pred)
+print(f"R2 score is: {r_squared}")
+```
+
+### MAE
+Из-за того, что в MSE мы учитываем квадрат отклонения, шумовые объекты могут сильно изменить наклон прямой. Поэтому в качестве альтернативы MSE можно использовать Mean Absolute Error: $L(y_i, a(x_i)) = |a(x_i) - y_i|$.
+
+$$MAE(a, X, Y) = \frac {1}{\ell} \sum^\ell_{i=1}|a(x_i) - y_i|$$
+
+Теперь обучим регрессию, оптимизируя MAE. В `sklearn` такая регрессия не реализована, но можно использовать модуль `statsmodels`. Более формально, необходимая модель может быть получена с помощью обучения квантильной регрессии с параметром `q=0.5`.
+
+**Задание.** Реализуйте функцию для подсчета MAE с использованием numpy.
+
+
+```python
+def MAE(y: np.array, y_pred: np.array) -> np.float64:
+    # <YOUR CODE HERE>
+
+
+mae = MAE(y=a, y_pred=pred)
+print(f"Mean Absolute Error is: {mae}")
+assert mae == 1.1
+```
+
+
+```python
+# !pip install git+https://github.com/statsmodels/statsmodels
+```
+
+
+```python
+import statsmodels.formula.api as smf
+```
+
+
+```python
+def scatter_points_and_plot_line_MAE(
+    X_subset: np.array, ax: matplotlib.axes._axes.Axes
+) -> None:
+    # визуализируем точки
+    ax.scatter(X_subset[:, 0], X_subset[:, 1])
+
+    # задаем зависимость переменной f15 от переменной f7 и передаем данные
+    mod = smf.quantreg("f15 ~ f7", pd.DataFrame(data=X_subset, columns=["f7", "f15"]))
+    res = mod.fit(q=0.5)
+
+    # визуализируем прямую
+    grid = np.linspace(0, 2, 100)
+    line = grid * res.params["f7"] + res.params["Intercept"]
+    ax.plot(grid, line)
+    ax.set_ylim(-20, 100)
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+```
+
+
+```python
+_, ax = plt.subplots(1, 2, figsize=(20, 5))
+ax[0].set_title("MAE without outliers")
+scatter_points_and_plot_line_MAE(X_subset, ax[0])
+ax[1].set_title("MAE with outliers")
+scatter_points_and_plot_line_MAE(X_subset_modified, ax[1])
+plt.show();
+```
+
+
+    
+![png](output_32_0.png)
+    
+
+
+Прямая практически не изменила направление из-за выбросов! Попробуем добавить больше шумовых объектов.
+
+
+```python
+np.random.seed(13)
+X_subset_modified_twice = np.vstack(
+    (X_subset_modified, np.random.randint(5, size=60).reshape(-1, 2) * [1, 30])
+)
+```
+
+
+```python
+_, ax = plt.subplots(1, 2, figsize=(20, 5))
+ax[0].set_title("MAE without outliers")
+scatter_points_and_plot_line_MAE(X_subset, ax[0])
+ax[1].set_title("MAE with outliers")
+scatter_points_and_plot_line_MAE(X_subset_modified_twice, ax[1])
+plt.show();
+```
+
+
+    
+![png](output_35_0.png)
+    
+
+
+Под таким количеством выбросов, изменилась даже регрессия над MAE.
+
+#### Оптимальные константы для MSE и MAE
+
+Допустим алгоритм возвращает константное предсказание: $a(x) = C, C \in R$. В качестве примера такого алгоритма можно представить предсказание прибыли в январе константой, равной средней прибыли за январь всех предыдущих лет работы.
+
+**Задание.** Найдите $C$, минимизирующий среднеквадратичную ошибку.
+
+**Решение.** Нам необходимо найти константу C, минимизирующую функцию $\frac{1}{n} \sum_{i}^{n} (C - y_i)^2$. Для этого возьмём производную этой функции и приравняем её к нулю. Константы сразу можно сократить: $\sum_{i}^{n} (C - y_i) = 0$. Преобразуем это выражение и выпишем ответ: $C = \frac{\sum_{i}^{n} y_i}{n}$. То есть оптимальная константа — среднее значение целевой переменной.
+
+**Задание.** Найдите $C$, минимизирующий среднюю абсолютную ошибку.
+TBD
+
+### Huber Loss
+Иногда используют "гибрид" MAE и MSE, который, как и MAE, устойчив к шумовым объектам, и, как и MSE, мало штрафует малые отклонения от фактического значения целевого признака. Этот гибрид называется Huber Loss:
+
+$$L_i(y_i, a(x_i)) = \phi_\varepsilon(a(x_i) - y_i)$$
+$$\phi_\varepsilon(z) = \begin{cases} \frac 1 2 z^2, - \varepsilon < z < \varepsilon, \\\varepsilon (|z| - \frac 1 2 \varepsilon), иначе \\ \end{cases}$$
+
+Можно проверить, что у этой функции существует непрерывная первая производная во всех точках.
+
+Оптимизация Huber Loss реализована в sklearn.
+
+**Задание.** Реализуйте функцию для подсчета Huber Loss с использованием numpy.
+
+
+```python
+def Huber(y: np.array, y_pred: np.array, eps: float = 1) -> np.float64:
+    # <YOUR CODE HERE>
+
+
+huber = Huber(y=a, y_pred=pred, eps=1)
+print("Huber Loss is:", huber)
+```
+
+### Mean Squared Logarithmic Error (MSLE)
+
+Эта функция потерь применяется в случаях, когда лучше получать заниженные прогнозы, нежели завышенные. Ещё она полезна, когда нас больше интересует правильно попасть в порядок целевой переменной, чем в её конкретное значение. Обратите внимание, что из-за присутствия логарифма в формуле **целевая переменная должна быть неотрицательной**. Единицу добавляем, чтобы случайно не получить логарифм нуля.
+
+$$L_i(a, X_i, Y_i) = (\log(a(x_i)+1) - \log(y_i+1))^2$$
+
+**Задание.** Реализуйте функцию для подсчета MSLE с использованием numpy.
+
+
+```python
+def MSLE(y: np.array, y_pred: np.array) -> np.float64:
+    # <YOUR CODE HERE>
+
+
+msle = MSLE(y=a, y_pred=pred)
+print(f"Mean Squared Logarifmic Error is: {msle}")
+```
+
+### Quantile Loss
+В некоторых задачах штраф за ошибку зависит не только от величины абсолютного отклонения от фактического значения, но и от знака этого отклонения. Например, лучше предсказать спрос больше, чем будет по факту, чем меньше, потому что во втором случае будет потеряна прибыль. В этом случае используется квантильная регрессия со следующей функцией потерь:
+$$L_i(y_i, a(x_i)) = \rho_\tau(y_i - x_i^T w),$$
+$$\rho_\tau(z) = \begin{cases} \tau z, \quad z > 0, \\ (\tau - 1) z, \quad z \leqslant 0 \end{cases}$$
+Параметр $\tau \in (0, 1)$ влияет на то, насколько различаются штрафы за положительную и отрицательную разницу.
+
+Изобразим график квантильной функции потерь вместе с некоторыми другими рассмотренными:
+
+
+```python
+grid = np.linspace(-3, 3, 100)
+quantile_tau = 0.2
+mse_loss = grid**2
+rmse_loss = np.sqrt(mse_loss)
+mae_loss = np.abs(grid)
+huber_loss = (
+    0.5 * mse_loss * (grid >= -1) * (grid <= 1)
+    + (mae_loss - 0.5) * (grid < -1)
+    + (mae_loss - 0.5) * (grid > 1)
+)
+quantile_loss = quantile_tau * grid * (grid > 0) + (quantile_tau - 1) * grid * (
+    grid <= 0
+)
+plt.plot(grid, mae_loss, label="Absolute Loss")
+plt.plot(grid, mse_loss, label="Quadratic Loss")
+plt.plot(grid, rmse_loss, label="Root Quadratic Loss")
+plt.plot(grid, huber_loss, label="Huber Loss")
+plt.plot(grid, quantile_loss, label="Quantile Loss", color='magenta')
+plt.xlabel("$y_i - a(x_i)$", fontsize=14)
+plt.ylabel("$L(y_i, a(x_i))$", fontsize=14)
+plt.title("Loss functions comparison", fontsize=18)
+plt.legend()
+plt.show()
+```
+
+
+    
+![png](output_44_0.png)
+    
+
+
+## 3. Обучение линейных моделей и отбор признаков
+
+Мы поработаем с данными о сообществах в США. Будем предсказывать количество насильственных преступлений относительно численности населения.
+
+[Описание датасета](http://archive.ics.uci.edu/ml/datasets/communities+and+crime)
+[Датасет на кэггле](https://www.kaggle.com/kkanda/communities%20and%20crime%20unnormalized%20data%20set)
+
+
+```python
+from sklearn.linear_model import Lasso, Ridge
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.preprocessing import MinMaxScaler
+```
+
+
+```python
+data = pd.read_csv("crimedata.csv", na_values=["?"])
+
+# оставим лишь нужные колонки
+requiredColumns = [5, 6] + list(range(11, 26)) + list(range(32, 103)) + [145]
+data = data[data.columns[requiredColumns]]
+
+# некоторые значения целевой переменной пропущены
+X = data.loc[data["ViolentCrimesPerPop"].notnull(), :].drop(
+    "ViolentCrimesPerPop", axis=1
+)
+y = data["ViolentCrimesPerPop"][X.index]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
+```
+
+### Baseline
+Обучим линейную регрессию и выведем качество по метрике MSE на обучающей и тестовой выборке.
+
+
+```python
+lr = LinearRegression().fit(X_train, y_train)
+print(f"Train: {mean_squared_error(y_train, lr.predict(X_train))}")
+print(f"Test: {mean_squared_error(y_test, lr.predict(X_test))}")
+```
+
+Популярным решением для регрессионных моделей является **регуляризация**.
+
+Во время оптимизации линейной регрессии, веса при переменных могут получиться большими в абсолютных значениях. Это не очень хорошо, поскольку классификатор будет чувствителен к крайне маленьким изменениям в признаках объекта, а значит, переобучен. Для решения проблемы к функционалу ошибки добавляют регуляризатор, который "штрафует" модель за слишком большую норму вектора весов:
+
+$$Q\alpha(w) = Q(w) + \alpha R(w)$$
+
+где $R(w)$ — регуляризатор
+
+Наиболее распространенными являются L1 и L2 регуляризаторы:
+$$L1: R(w) = ||w||_1 = \sum^d_i |w_i|$$
+
+$$L2: R(w) = ||w||_2 = \sum^d_i w_i^2$$
+
+Давайте применим каждый из них к нашей задаче и посмотрим на изменение в результатах.
+
+
+
+```python
+lasso = Lasso(5.0).fit(X_train, y_train)
+print("Lasso")
+print(f"Train: {mean_squared_error(y_train, lasso.predict(X_train))}")
+print(f"Test: {mean_squared_error(y_test, lasso.predict(X_test))}")
+
+ridge = Ridge(5.0).fit(X_train, y_train)
+print("\nRidge")
+print(f"Train: {mean_squared_error(y_train, ridge.predict(X_train))}")
+print(f"Test: {mean_squared_error(y_test, ridge.predict(X_test))}")
+```
+
+### Scaling
+Попробуем MinMaxScaler.
+
+
+```python
+sc = MinMaxScaler()
+X_train_scaled = pd.DataFrame(data=sc.fit_transform(X_train), columns=X_train.columns)
+X_test_scaled = pd.DataFrame(data=sc.transform(X_test), columns=X_test.columns)
+```
+
+**Задание.** Напишите код обучения линейной регрессии на масштабированных признаках и выведите ошибку на обучающей и тестовой выборках.
+
+
+```python
+# <YOUR CODE HERE>
+```
+
+**Задание:** проделайте аналогичную работу, добавив Ridge регуляризацию
+
+
+```python
+# <YOUR CODE HERE>
+```
+
+### Отбор признаков на основе дисперсии
+
+Полезны ли признаки, имеющие высокую дисперсию? А низкую?
+
+
+```python
+features_variance = X_train_scaled.var().sort_values(ascending=False)
+features_variance.head()
+```
+
+Попробуем удалить признаки с самой низкой дисперсией и посмотреть, как изменится качество. В sklearn есть специальный инструмент для такого наивного отбора признаков. Стоит ли нормализовать перед этим признаки?
+
+
+```python
+from sklearn.feature_selection import VarianceThreshold
+```
+
+
+```python
+# можно убрать все признаки, дисперсия которых меньше заданного значения
+vs_transformer = VarianceThreshold(0.01)
+
+X_train_var = pd.DataFrame(
+    data=vs_transformer.fit_transform(X_train_scaled),
+    columns=X_train_scaled.columns[vs_transformer.get_support()],
+)
+X_test_var = pd.DataFrame(
+    data=vs_transformer.transform(X_test_scaled),
+    columns=X_test_scaled.columns[vs_transformer.get_support()],
+)
+
+X_train_var.shape
+```
+
+
+```python
+lr = LinearRegression().fit(X_train_var, y_train)
+print(f"Train: {mean_squared_error(y_train, lr.predict(X_train_var))}")
+print(f"Test: {mean_squared_error(y_test, lr.predict(X_test_var))}")
+```
+
+
+```python
+ridge = Ridge(5.0).fit(X_train_var, y_train)
+print(f"Train: {mean_squared_error(y_train, ridge.predict(X_train_var))}")
+print(f"Test: {mean_squared_error(y_test, ridge.predict(X_test_var))}")
+```
+
+### Отбор признаков на основе корреляции с целевой переменной
+Можно выбрать k признаков, которые дают наиболее высокие значения корреляции с целевой переменной.
+
+
+```python
+from sklearn.feature_selection import SelectKBest, f_regression
+```
+
+
+```python
+# Выбираем 15 лучших признаков
+sb = SelectKBest(f_regression, k=15)
+
+X_train_kbest = pd.DataFrame(
+    data=sb.fit_transform(X_train_var, y_train),
+    columns=X_train_var.columns[sb.get_support()],
+)
+X_test_kbest = pd.DataFrame(
+    data=sb.transform(X_test_var), columns=X_test_var.columns[sb.get_support()]
+)
+```
+
+
+```python
+lr = LinearRegression().fit(X_train_kbest, y_train)
+print(f"Train: {mean_squared_error(y_train, lr.predict(X_train_kbest))}")
+print(f"Test: {mean_squared_error(y_test, lr.predict(X_test_kbest))}")
+```
+
+
+```python
+ridge = Ridge(5.0).fit(X_train_kbest, y_train)
+print(f"Train: {mean_squared_error(y_train, ridge.predict(X_train_kbest))}")
+print(f"Test: {mean_squared_error(y_test, ridge.predict(X_test_kbest))}")
+```
+
+А можно выбрать самые значимые признаки с точки зрения регрессии с $L_1$-регуляризацией.
+
+
+```python
+from sklearn.feature_selection import SelectFromModel
+```
+
+
+```python
+lasso = Lasso(5.0)
+l1_select = SelectFromModel(lasso)
+
+X_train_l1 = pd.DataFrame(
+    data=l1_select.fit_transform(X_train_var, y_train),
+    columns=X_train_var.columns[l1_select.get_support()],
+)
+X_test_l1 = pd.DataFrame(
+    data=l1_select.transform(X_test_var),
+    columns=X_test_var.columns[l1_select.get_support()],
+)
+
+X_train_l1.shape
+```
+
+
+```python
+lr = LinearRegression().fit(X_train_l1, y_train)
+print(f"Train: {mean_squared_error(y_train, lr.predict(X_train_l1))}")
+print(f"Test: {mean_squared_error(y_test, lr.predict(X_test_l1))}")
+
+ridge = Ridge(5.0).fit(X_train_l1, y_train)
+print(f"Train: {mean_squared_error(y_train, ridge.predict(X_train_l1))}")
+print(f"Test: {mean_squared_error(y_test, ridge.predict(X_test_l1))}")
+```
+
+### Зададим все преобразования, отбор признаков и обучение при помощи Pipeline
+
+
+```python
+from sklearn.pipeline import Pipeline
+
+pipe = Pipeline(
+    steps=[
+        ("scaler", MinMaxScaler()),
+        ("variance", VarianceThreshold(0.01)),
+        ("selection", SelectFromModel(Lasso(5.0))),
+        ("regressor", Ridge(5.0)),
+    ]
+)
+
+pipe.fit(X_train, y_train)
+
+pipe.named_steps
+```
+
+
+```python
+print(f"Train: {mean_squared_error(y_train, pipe.predict(X_train))}")
+print(f"Test: {mean_squared_error(y_test, pipe.predict(X_test))}")
+```
+
+Можно даже перебрать гиперпараметры с помощью `GridSearch`:
+
+
+```python
+pipe.get_params()
+```
+
+
+```python
+param_grid = {
+    "variance__threshold": [0.005, 0.0075, 0.009, 0.01, 0.011, 0.012],
+    "selection__estimator__alpha": [0.1, 0.5, 1.0, 1.5, 2.0, 5.0, 10.0],
+    "regressor__alpha": [0.1, 0.5, 1.0, 1.5, 2.0, 5.0, 10.0],
+}
+grid_search = GridSearchCV(pipe, param_grid, cv=5)
+
+grid_search.fit(X_train, y_train)
+```
+
+
+```python
+pipe_best = grid_search.best_estimator_
+pipe_best.named_steps
+```
+
+
+```python
+pipe_best.fit(X_train, y_train)
+print(f"Train: {mean_squared_error(y_train, pipe_best.predict(X_train))}")
+print(f"Test: {mean_squared_error(y_test, pipe_best.predict(X_test))}")
+```

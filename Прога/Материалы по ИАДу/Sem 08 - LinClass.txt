@@ -1,0 +1,1257 @@
+Источник: Sem 08 - LinClass.ipynb
+
+---
+
+# Интеллектуальный анализ данных, БИ
+
+## НИУ ВШЭ, 2025-26 учебный год
+
+# Семинар 8: Линейная классификация
+
+## Теоретическая часть
+
+### Предсказания в бинарной линейной классификации
+__Вспомнить из лекции:__
+* Как выполняются предсказания в бинарной линейной классификации?
+* Как интерпретировать веса?
+* Вспомните обозначения $\langle \cdot, \cdot \rangle$, $sign(z)$, $[z>a]$.
+
+#### Задача 1.
+Какое предсказание вернет бинарный линейный классификатор $a(x) = sign(\langle w, x \rangle+w_0)$ для объекта $x=(1, 0, 0, 1, 1)$ при использовании весов $w=(0.1, -0.2, 0.5, -1.1, 0)$ и $w_0=0.35$?
+
+__Решение.__
+Запишем скалярное произведение: $\langle w, x \rangle = w_1 x_1 + \dots + w_d x_d$, где $d$ - размерность обоих векторов (число признаков). В нашей задаче $d=5$. Итак, в скобках получится значение $0.1\cdot1 - 0.2\cdot0 + 0.5\cdot 0 -1.1 \cdot 1 + 0 \cdot 1 + 0.35 = -0.65$. Его знак отрицательный, значит $a(x) = -1$.
+
+#### Задача 2.
+Визуализируйте разделящую поверхность классификатора $a(x) = sign(\langle w, x \rangle+w_0)$ для $w=(-1, 2)$, $w_0=0.5$, задача бинарной классификации с двумя признаками.
+
+__Решение.__
+
+Предсказания в линейной классификации выполняются по формуле $a(x) = sign(\langle w, x\rangle +w_0)$, то есть класс +1, если выражение в скобках больше 0, и -1, если выражение в скобках меньше 0. Если выражение в скобках равно 0, считаем, что отказываемся от классификации или выбираем случайный класс (на практике такая ситуация встречается очень редко). Соответственно, мы можем сделать такое предсказание в каждой точке признакового пространства, то есть для любого возможного объекта, и получить области классов +1 и -1. Разделяющей границей этих двух областей будет прямая, поэтому классификация линейная.
+
+Разберемся, почему разделяющей границей будет прямая. Вспомним, что уравнение $w_1 x_1 + w_2 x_2 + w_0 = 0$ задает прямую на плоскости в координатах $x_1-x_2$ (мы обычно обозначаем эти координаты $d_1-d_2$, чтобы не путать $x_1$ - первый признак или первый объект в выборке; в данном контексте - первый признак). Все точки $x=(x_1, x_2)$, для которых $w_1 x_1 + w_2 x_2 + w_0 > 0$, находятся с одной стороны от прямой, а все точки, для которых $w_1 x_1 + w_2 x_2 + w_0 < 0$, с другой стороны от прямой. А эти два условия как раз и проверяются в бинарном линейной классификаторе.
+
+В нашем случае прямая задается уравнением $-x_1 + 2 x_2 + 0.5 = 0$. Построим ее по точкам: при $x_1=0$ выполнено $2 x_2+0.5=0$, то есть $x_2=-1/4$; при $x_1=1$ выполнено $2 x_2 -0.5=0$, то есть $x_2=1/4$. Проводим прямую через точки $(0, -1/4)$ и $(1, 1/4)$. Теперь выбираем любую точку, не принадлежащую прямой, например $(0, 1/4)$. Проверяем, какой будет знак выражения $-x_1 + 2 x_2 + 0.5$: $0 + 0.5 + 0.5 = 1 > 0$. Значит, в полуплоскости, где находится эта точка, мы предсказываем класс +1, а в другой - класс -1.
+
+### Вспомнить из лекции
+* Какие метрики бинарной классификации вы знаете?
+* Какие проблемы есть у метрики accuracy? в каких случаях она нам не подходит?
+* Что такое матрица ошибок?
+
+## Практическая часть
+В практической части мы обучим линейный классификатор на данных кредитного скорринга, проанализируем веса модели, научимся работать с категориальными признаками в линейных моделях. Далее поработаем с метриками, сравних их между собой и найдем оптимиальные гиперпараметры в модели.
+
+
+```python
+import pandas as pd
+```
+
+Мы будем работать с [данными клиентов банка](https://archive.ics.uci.edu/ml/datasets/statlog+(german+credit+data) и решать задачу кредитного скоринга.
+
+Значения признаков:
+* account: банковский счет (-1: отриц. баланс, 0: нет счета, 1: до 200 ед., 2: более 200 ед.)
+* duration: на какой период запрашивают кредит
+* credit_history: рейтинг по кредитной истории (от 0 - отличная кр. история до 4 - критическая ситуация с кредитами)
+* amount: на какую сумму запрашивают кредит
+* savings: сберегательный счет (0: нет, 1: < 100, 2: 100 <= ... < 500, 3: 500 <= ... < 1000, 4:  >= 1000)
+* employment: срок работы на текущей позиции (0: не работает, 1: до 1 года, 2: от 1 до 4 лет, 3: от 4 до 7 лет, 4: более 7 лет)
+* guarantors: 1 - есть поручители, 0 - нет
+* residence:  сколько лет резидент
+* age: возраст, деленный на 100
+* credits_number: число кредитов
+* job: 0: не работает, 1: неквалифицированный, 2: квалифицированный специалист, 3: высокая должность или бизнес
+* maintenance_people: число людей, которых обеспечивает заемщик
+* telephone: указан ли телефон (1: да, 0: нет)
+* foreign: 1: иностранец, 0: нет
+* real_estate: 1: есть недвижимость, 0: нет недвижимости
+* life_insurance: 1: оформлено страхование жизни, 0, нет страховки
+* car: 1: есть автомобиль, 0: нет автомобиля
+* housing_rent: 1: платит за съем жилья, 0: не платит за съем жилья
+* sex: пол - 1: муж., 0: жен.
+* purpose: на какую цель запрашивают кредит (из нескольких вариантов)
+* target: 1: кредит выдан, 0: в кредите отказано
+
+Требуется решить задачу предсказания значения в последнем столбце, то есть задачу бинарной классификации.
+
+
+```python
+# !pip install xlrd
+```
+
+
+```python
+tab = pd.read_excel(
+    "https://github.com/nadiinchi/voronovo_seminar_materials/blob/master/base_track/seminars/scoring.xls?raw=true"
+)
+tab.head()
+```
+
+
+
+
+
+  <div id="df-c2268700-a285-45e0-8d92-3c8b8bdf9f50" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>account</th>
+      <th>duration</th>
+      <th>credit_history</th>
+      <th>amount</th>
+      <th>savings</th>
+      <th>employment</th>
+      <th>guarantors</th>
+      <th>residence</th>
+      <th>age</th>
+      <th>credits_number</th>
+      <th>...</th>
+      <th>maintenance_people</th>
+      <th>telephone</th>
+      <th>foreign</th>
+      <th>real_estate</th>
+      <th>life_insurance</th>
+      <th>car</th>
+      <th>housing_rent</th>
+      <th>sex</th>
+      <th>purpose</th>
+      <th>target</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>0.18</td>
+      <td>2</td>
+      <td>0.13110</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.34</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>business</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-1</td>
+      <td>0.18</td>
+      <td>0</td>
+      <td>0.15520</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0.31</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>business</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-1</td>
+      <td>0.12</td>
+      <td>2</td>
+      <td>0.04510</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.21</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>retraining</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-1</td>
+      <td>0.30</td>
+      <td>0</td>
+      <td>0.40360</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>0.25</td>
+      <td>3</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>business</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>0.36</td>
+      <td>2</td>
+      <td>0.09095</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.37</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>education</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 21 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-c2268700-a285-45e0-8d92-3c8b8bdf9f50')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-c2268700-a285-45e0-8d92-3c8b8bdf9f50 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-c2268700-a285-45e0-8d92-3c8b8bdf9f50');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+<div id="df-fb5def59-9deb-44ba-ac45-0bfa3784c9c6">
+  <button class="colab-df-quickchart" onclick="quickchart('df-fb5def59-9deb-44ba-ac45-0bfa3784c9c6')"
+            title="Suggest charts"
+            style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+  </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+  <script>
+    async function quickchart(key) {
+      const quickchartButtonEl =
+        document.querySelector('#' + key + ' button');
+      quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+      quickchartButtonEl.classList.add('colab-df-spinner');
+      try {
+        const charts = await google.colab.kernel.invokeFunction(
+            'suggestCharts', [key], {});
+      } catch (error) {
+        console.error('Error during call to suggestCharts:', error);
+      }
+      quickchartButtonEl.classList.remove('colab-df-spinner');
+      quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+    }
+    (() => {
+      let quickchartButtonEl =
+        document.querySelector('#df-fb5def59-9deb-44ba-ac45-0bfa3784c9c6 button');
+      quickchartButtonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+    })();
+  </script>
+</div>
+    </div>
+  </div>
+
+
+
+
+По строкам информация о клиентах. Целевая переменная — выдан кредит или нет.
+
+
+```python
+tab.dtypes
+```
+
+
+
+
+    account                 int64
+    duration              float64
+    credit_history          int64
+    amount                float64
+    savings                 int64
+    employment              int64
+    guarantors              int64
+    residence               int64
+    age                   float64
+    credits_number          int64
+    job                     int64
+    maintenance_people      int64
+    telephone               int64
+    foreign                 int64
+    real_estate             int64
+    life_insurance          int64
+    car                     int64
+    housing_rent            int64
+    sex                     int64
+    purpose                object
+    target                  int64
+    dtype: object
+
+
+
+Признаки в основном числовые.
+
+
+```python
+tab["target"].value_counts()
+```
+
+
+
+
+    1    300
+    0    300
+    Name: target, dtype: int64
+
+
+
+Классы сбалансированы.
+
+Создаем матрицу объекты-признаки и матрицу ответов. Удалим пока столбец с категориальной переменной, чтобы оставить только числовые признаки.
+
+
+```python
+X = tab[tab.columns[:-2]]
+y = tab["target"]
+```
+
+
+```python
+X.head()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>account</th>
+      <th>duration</th>
+      <th>credit_history</th>
+      <th>amount</th>
+      <th>savings</th>
+      <th>employment</th>
+      <th>guarantors</th>
+      <th>residence</th>
+      <th>age</th>
+      <th>credits_number</th>
+      <th>job</th>
+      <th>maintenance_people</th>
+      <th>telephone</th>
+      <th>foreign</th>
+      <th>real_estate</th>
+      <th>life_insurance</th>
+      <th>car</th>
+      <th>housing_rent</th>
+      <th>sex</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>0.18</td>
+      <td>2</td>
+      <td>0.13110</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.34</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-1</td>
+      <td>0.18</td>
+      <td>0</td>
+      <td>0.15520</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0.31</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-1</td>
+      <td>0.12</td>
+      <td>2</td>
+      <td>0.04510</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.21</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-1</td>
+      <td>0.30</td>
+      <td>0</td>
+      <td>0.40360</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>0.25</td>
+      <td>3</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>0.36</td>
+      <td>2</td>
+      <td>0.09095</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.37</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+#### Разделение выборки
+
+
+```python
+from sklearn.model_selection import train_test_split
+```
+
+
+```python
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, shuffle=True, random_state=0
+)
+```
+
+
+```python
+y_train.value_counts()
+```
+
+
+
+
+    1    222
+    0    198
+    Name: target, dtype: int64
+
+
+
+
+```python
+y_test.value_counts()
+```
+
+
+
+
+    0    102
+    1     78
+    Name: target, dtype: int64
+
+
+
+
+```python
+X_train.shape, y_train.shape
+```
+
+
+
+
+    ((420, 19), (420,))
+
+
+
+#### Нормируем данные
+
+
+```python
+from sklearn.preprocessing import StandardScaler
+```
+
+
+```python
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+```
+
+#### Импортируем класс модели
+
+
+```python
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import accuracy_score
+```
+
+
+```python
+clf_lr = LinearRegression()
+clf_lr.fit(X_train, y_train)
+```
+
+
+
+
+<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>LinearRegression()</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">LinearRegression</label><div class="sk-toggleable__content"><pre>LinearRegression()</pre></div></div></div></div></div>
+
+
+
+
+```python
+y_pred = clf_lr.predict(X_test)
+```
+
+
+```python
+accuracy_score(y_test, y_pred > 0.5)
+```
+
+
+
+
+    0.6388888888888888
+
+
+
+#### Важности и веса признаков
+Большинство алгоритмов умеют так или иначе оценивать важности признаков.
+В линейной модели в качестве важностей можно рассматривать веса признаков. Они хранятся в атрибуте coef\_ и появляются, конечно, только после вызова процедуры обучения.
+
+
+```python
+clf_lr.coef_
+```
+
+
+
+
+    array([ 0.03344627, -0.0779239 ,  0.08754819, -0.02066605,  0.03067396,
+            0.06774134, -0.00975411,  0.00109616,  0.0185817 , -0.04661195,
+            0.00099741, -0.00569433,  0.01735849, -0.03505761,  0.06359324,
+           -0.0134745 ,  0.06344944, -0.0416773 ,  0.05088774])
+
+
+
+**Задание.** Оформить веса признаков в виде датафрейма: первый столбец - имя признака, второй столбец - вес, и отсортировать датафрейм по увеличению веса.
+
+
+```python
+# <YOUR CODE HERE>
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>duration</th>
+      <td>-0.077924</td>
+    </tr>
+    <tr>
+      <th>credits_number</th>
+      <td>-0.046612</td>
+    </tr>
+    <tr>
+      <th>housing_rent</th>
+      <td>-0.041677</td>
+    </tr>
+    <tr>
+      <th>foreign</th>
+      <td>-0.035058</td>
+    </tr>
+    <tr>
+      <th>amount</th>
+      <td>-0.020666</td>
+    </tr>
+    <tr>
+      <th>life_insurance</th>
+      <td>-0.013474</td>
+    </tr>
+    <tr>
+      <th>guarantors</th>
+      <td>-0.009754</td>
+    </tr>
+    <tr>
+      <th>maintenance_people</th>
+      <td>-0.005694</td>
+    </tr>
+    <tr>
+      <th>job</th>
+      <td>0.000997</td>
+    </tr>
+    <tr>
+      <th>residence</th>
+      <td>0.001096</td>
+    </tr>
+    <tr>
+      <th>telephone</th>
+      <td>0.017358</td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td>0.018582</td>
+    </tr>
+    <tr>
+      <th>savings</th>
+      <td>0.030674</td>
+    </tr>
+    <tr>
+      <th>account</th>
+      <td>0.033446</td>
+    </tr>
+    <tr>
+      <th>sex</th>
+      <td>0.050888</td>
+    </tr>
+    <tr>
+      <th>car</th>
+      <td>0.063449</td>
+    </tr>
+    <tr>
+      <th>real_estate</th>
+      <td>0.063593</td>
+    </tr>
+    <tr>
+      <th>employment</th>
+      <td>0.067741</td>
+    </tr>
+    <tr>
+      <th>credit_history</th>
+      <td>0.087548</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+Признаки отсортировались по логичным критериям: плата за съем жилья, число кредитов, заемщик-иностранец уменьшают шанс получить кредит; наличие собственности, машины, работы, счета в банке - увеличивают шансы. Впрочем, некоторые признаки отсортировались менее логично: например, наличие поручителя тоже голосует в "минус", хотя и с маленьким весом.
+
+__Обратите внимание:__ интерпретировать величину весов можно, только если данные отнормированы. Иначе модуль веса будет зависеть от масштаба признака.
+
+#### Работа с категориальным признаком
+
+Применим метод one-hot-encoding к переменной "цель получения кредита", чтобы включить ее в модель.
+
+
+```python
+tab_ohe = pd.get_dummies(tab, "purpose")
+tab_ohe.head()
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>account</th>
+      <th>duration</th>
+      <th>credit_history</th>
+      <th>amount</th>
+      <th>savings</th>
+      <th>employment</th>
+      <th>guarantors</th>
+      <th>residence</th>
+      <th>age</th>
+      <th>credits_number</th>
+      <th>...</th>
+      <th>purpose_business</th>
+      <th>purpose_car_new</th>
+      <th>purpose_car_used</th>
+      <th>purpose_domestic_appliances</th>
+      <th>purpose_education</th>
+      <th>purpose_furniture</th>
+      <th>purpose_others</th>
+      <th>purpose_repairs</th>
+      <th>purpose_retraining</th>
+      <th>purpose_television</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>0.18</td>
+      <td>2</td>
+      <td>0.13110</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.34</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-1</td>
+      <td>0.18</td>
+      <td>0</td>
+      <td>0.15520</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0.31</td>
+      <td>1</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-1</td>
+      <td>0.12</td>
+      <td>2</td>
+      <td>0.04510</td>
+      <td>1</td>
+      <td>3</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.21</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-1</td>
+      <td>0.30</td>
+      <td>0</td>
+      <td>0.40360</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>0.25</td>
+      <td>3</td>
+      <td>...</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>0.36</td>
+      <td>2</td>
+      <td>0.09095</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>4</td>
+      <td>0.37</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 30 columns</p>
+</div>
+
+
+
+
+```python
+X_ohe = tab_ohe.drop("target", axis=1)
+X_train_ohe, X_test_ohe, y_train, y_test = train_test_split(
+    X_ohe, y, test_size=0.3, shuffle=True, random_state=0
+)
+scaler = StandardScaler()
+X_train_ohe = scaler.fit_transform(X_train_ohe)
+X_test_ohe = scaler.transform(X_test_ohe)
+```
+
+
+```python
+clf = LinearRegression()
+clf.fit(X_train_ohe, y_train)
+y_pred = clf.predict(X_test_ohe)
+print(f"Accuracy: {accuracy_score(y_test, y_pred > 0.5):.2f}")
+```
+
+    Accuracy: 0.67
+    
+
+Качество с новым признаком повысилось.
+
+А что, если мы просто пронумеруем категории? Для этого воспользуемся классом LabelEncoder:
+
+
+```python
+from sklearn.preprocessing import LabelEncoder
+```
+
+
+```python
+le = LabelEncoder()
+tab["purpose"] = le.fit_transform(tab["purpose"])
+X_le = tab[tab.columns[:-1]]
+X_train_le, X_test_le, y_train, y_test = train_test_split(
+    X_le, y, test_size=0.3, shuffle=True, random_state=0
+)
+scaler = StandardScaler()
+X_train_le = scaler.fit_transform(X_train_le)
+X_test_le = scaler.transform(X_test_le)
+```
+
+
+```python
+clf = LinearRegression()
+clf.fit(X_train_le, y_train)
+y_pred = clf.predict(X_test_le)
+print(f"Accuracy: {accuracy_score(y_test, y_pred > 0.5):.2f}")
+```
+
+    Accuracy: 0.65
+    
+
+Посчитаем метрики нашей модели. Метрики разобранные на лекции уже реализованы в библиотеке scikit-learn.
+
+
+```python
+from sklearn.metrics import confusion_matrix
+
+confusion_matrix(y_test, y_pred > 0.5)
+```
+
+
+
+
+    array([[55, 47],
+           [16, 62]])
+
+
+
+
+```python
+from sklearn.metrics import precision_score
+
+print(f"Precision: {precision_score(y_test, y_pred > 0.5):.2f}")
+```
+
+    Precision: 0.57
+    
+
+
+```python
+from sklearn.metrics import recall_score
+
+print(f"Recall: {recall_score(y_test, y_pred > 0.5):.2f}")
+```
+
+    Recall: 0.79
+    
+
+
+```python
+from sklearn.metrics import f1_score
+
+print(f"F1: {f1_score(y_test, y_pred > 0.5):.2f}")
+```
+
+    F1: 0.66
+    
+
+Порог 0.5 мы выбрали самостоятельно, и мы можем его менять. Как увеличение порога отразится на precision/recall? На практике, перед нами всегда встает трейдофф: потерять часть сигнала взамен на большую точность или получить false positives взамен на больший recall.
+
+**Задание.** Постройте на одном графике precision, recall и f1 score в зависимости от порога.
+
+
+```python
+# <YOUR CODE HERE>
+```
+
+
+    
+![png](output_49_0.png)
+    
+
+
+**Задание.** Найдите порог, который соответствует максимизации f1 score.
+
+
+```python
+# <YOUR CODE HERE>
+```
+
+    Best threshold is 0.53. F1 score for the threshold is 0.66.
+    
+
+**Задание.** Обучите линейную регрессию с регуляризацией и подберите параметр регуляризации исходя из максимального f1-score.
+
+
+```python
+# <YOUR CODE HERE>
+```
+
+    Best alpha is 0.10. F1 score for the threshold is 0.60.
+    

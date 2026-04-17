@@ -1,0 +1,1911 @@
+Источник: Sem 01 - OOP.ipynb
+
+---
+
+# Интеллектуальный анализ данных, БИ
+
+## НИУ ВШЭ, 2025-26 учебный год
+
+# Семинар 1. Объектно-ориентированное программирование в Python
+
+
+
+## Вступление
+Бывает, что вам нужно написать программу, которую вы запустите один раз и которая просто должна решить некоторую задачу. В этом случае все средства хороши, и можно оформлять код так, как вам удобно. Есть и другая ситуация: вам надо запрограммировать что-то, что потом вы будете использовать много раз, а ещё этот код могут захотеть редактировать другие люди. Тут надо задуматься о правильном оформлении кода.
+
+В машинном обучении главное — это модели, их обучение, применение, подсчёт качества и прочие связанные операции. Допустим, вы собрались запрограммировать обучение и применение метода k ближайших соседей и выложить в открытый доступ. Тогда будет логично потребовать от вашего кода следующее:
+1. Вы можете что-то улучшить в нём, не поменяв логику работы, и это не сломает ничего у пользователей. Будет странно, если вы, скажем, замените циклы на векторные операции в numpy, опубликуете новую версию, и любой код, зависящий от вашего, перестанет работать. Ведь суть того, что делает ваш код, не поменялась!
+2. Достаточно легко можно сделать расширенные версии kNN на основе вашего кода — например, запрограммировать kNN с весами.
+3. От пользователей скрыты все детали вашей реализации — чтобы пользоваться вашим кодом для kNN, им не нужно вникать, как вы храните данные, как ищете ближайших соседей и т.д. Они просто вызывают нужные функции, и всё работает.
+
+Объектно-ориентированное программирование (ООП) — это подход к организации кода, который (наверное) лучше всего подходит для оформления операций из машинного обучения. В его основе лежат классы и объекты, а также три важных свойства: инкапсуляция, наследование и полиморфизм. Ниже мы разберёмся со всем этим.
+
+Программист может создать класс, своеобразный чертёж, который будет определять поведение объектов этого класса: какие данные они могут хранить и какой код исполнять. После этого можно создавать объекты класса с ожидаемым поведением.
+
+Поломать голову над формальными определениями ООП можно [на вики](https://ru.wikipedia.org/wiki/%D0%9E%D0%B1%D1%8A%D0%B5%D0%BA%D1%82%D0%BD%D0%BE-%D0%BE%D1%80%D0%B8%D0%B5%D0%BD%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D0%BE%D0%B5_%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5).
+
+### План семинара:
+* [Как создать класс](#Как-создать-класс)
+* [Методы](#Методы)
+* [Атрибуты класса и метод `__init__`](#Атрибуты-класса-и-метод-__init__)
+* [Magic методы](#Magic-методы)
+* [Копирование](#Копирование)
+* [getter, setter](#getter,-setter)
+* [`@staticmethod`](#@staticmethod)
+* [`@classmethod`](#@classmethod)
+* [Наследование, `super()`](#Наследование,-super())
+* [ABC — Abstract Base Classes](#ABC-—-Abstract-Base-Classes)
+* [Datacasses](#Dataclasses)
+
+## Как создать класс
+Класс в питоне создаётся специальной конструкцией `class`. Экземпляр (объект, instance) класса создаётся вызовом класса со скобками.
+
+
+```python
+class DummyClass:
+    pass
+
+
+dummy_object = DummyClass()
+
+dummy_object
+```
+
+
+
+
+    <__main__.DummyClass at 0x108273b20>
+
+
+
+
+```python
+import math
+
+vars(DummyClass)
+```
+
+
+
+
+    mappingproxy({'__module__': '__main__',
+                  '__dict__': <attribute '__dict__' of 'DummyClass' objects>,
+                  '__weakref__': <attribute '__weakref__' of 'DummyClass' objects>,
+                  '__doc__': None})
+
+
+
+Названия классов в питоне пишутся CamelCase, названия функций/объектов/переменных snake_case.
+
+## Методы
+
+Классы могут определять функции, которые можно будет вызывать от их объектов. Такие функции называются методами. В любом (почти) методе первым аргументом является self. В него будет передан сам объект, от которого вызывается метод.
+
+Наш класс не особо полезен, так как ничего не делает. Давайте напишем класс с методом. Вызов методов происходит через оператор `.`
+
+
+```python
+GOOSE = """
+░░░░░▄▀▀▀▄░░░░░░░░
+▄███▀░◐░░░▌░░░░░░░
+░░░░▌░░░░░▐░░░░░░░
+░░░░▐░░░░░▐░░░░░░░
+░░░░▌░░░░░▐▄▄░░░░░
+░░░░▌░░░░▄▀▒▒▀▀▀▀▄
+░░░▐░░░░▐▒▒▒▒▒▒▒▒▀▀▄
+░░░▐░░░░▐▄▒▒▒▒▒▒▒▒▒▒▀▄
+░░░░▀▄░░░░▀▄▒▒▒▒▒▒▒▒▒▒▀▄
+░░░░░░▀▄▄▄▄▄█▄▄▄▄▄▄▄▄▄▄▄▀▄
+░░░░░░░░░░░▌▌▌▌░░░░░
+░░░░░░░░░░░▌▌░▌▌░░░░░
+░░░░░░░░░▄▄▌▌▄▌▌░░░░░"""
+
+
+class GoosePrinter:
+    GOOSE = ""
+
+    def print_goose(self) -> None:
+        print(self.GOOSE)
+
+
+goose_printer = GoosePrinter()
+
+goose_printer.print_goose()
+```
+
+    
+    
+
+
+```python
+vars(GoosePrinter)
+```
+
+
+
+
+    mappingproxy({'__module__': '__main__',
+                  'GOOSE': '',
+                  'print_goose': <function __main__.GoosePrinter.print_goose(self) -> None>,
+                  '__dict__': <attribute '__dict__' of 'GoosePrinter' objects>,
+                  '__weakref__': <attribute '__weakref__' of 'GoosePrinter' objects>,
+                  '__doc__': None})
+
+
+
+Обратите внимание, что мы вызвали метод без аргументов, хотя в сигнатуре есть аргумент `self`. `self` подаётся "автоматически".
+
+**NB:** первый аргумент можно назвать как угодно, не обязательно `self`. Но не нужно.
+
+## Атрибуты класса и метод `__init__`
+
+Помимо методов у объектов класса могут быть атрибуты &mdash; переменные. К ним так же можно обращаться через `.`, а создавать внутри класса их как раз можно при помощи вышеупомянутого `self`.
+
+Любой класс может определить метод `__init__` &mdash; конструктор: он выполняется при создании объекта класса, а его аргументы передаются в скобках после названия класса во время создания. Обычно именно в нём и задаются атрибуты класса.
+
+Давайте напишем класс целочисленной точки на плоскости, объекты которого будут уметь выводить свои координаты:
+
+
+```python
+class Point2D:
+    """
+    A point in 2D space
+    :param x: x coordinate
+    :param y: y coordinate
+    """
+
+    def __init__(self, x: int, y: int) -> None:
+        # Создаём атрибуты и присваиваем им переданные значения координат
+        self.x = x
+        self.y = y
+
+    def print_coords(self) -> None:
+        # Выводим координаты, обращаясь к ним через self с точкой
+        print(f"({self.x}, {self.y})")
+
+    def first_coord(self) -> int:
+        return x
+
+
+point = Point2D(3, 5)
+point.print_coords()
+
+vars(Point2D)
+```
+
+    (3, 5)
+    
+
+
+
+
+    mappingproxy({'__module__': '__main__',
+                  '__doc__': '\n    A point in 2D space\n    :param x: x coordinate\n    :param y: y coordinate\n    ',
+                  '__init__': <function __main__.Point2D.__init__(self, x: int, y: int) -> None>,
+                  'print_coords': <function __main__.Point2D.print_coords(self) -> None>,
+                  'first_coord': <function __main__.Point2D.first_coord(self) -> int>,
+                  '__dict__': <attribute '__dict__' of 'Point2D' objects>,
+                  '__weakref__': <attribute '__weakref__' of 'Point2D' objects>})
+
+
+
+Мы задаём координаты в конструкторе, присваивая их `self` через точку, и потом можем использовать их в методе.
+
+## Magic методы
+В питоне у классов могут быть так называемые магические методы. Это методы, которые может определить класс, которые позволяют ему действовать определённым образом. Обычно они не вызываются напрямую.
+
+Все магические методы отличаются тем, что их названия начинаются и заканчиваются на двойные подчёркивания (`__method__`). С одним таким мы уже познакомились &mdash; это метод `__init__`, который вызывается при создании объекта класса. Давайте посмотрим, какие ещё бывают магические методы:
+
+### \_\_str\_\_ и \_\_repr\_\_ [(Документация)](https://docs.python.org/3/reference/datamodel.html#object.__repr__)
+Методы `__str__` и `__repr__` позволяют добавить текстовое описание к объекту класса. Они возвращают строку, описывающую объект.
+
+Метод `__str__` должен возвращать строку, описывающую объект простым, понятным, читаемым образом, а метод `__repr__` предназаначен больше для дебага и должен возвращать всю информацию об объекте, а его вывод должен в идеале быть исполняемым кодом, с помощью которого можно было бы создать такой же объект.
+
+Метод `__str__` вызывается, например, когда мы принтим объект или берём `str` от него (например, `str(point)`).
+Метод `__repr__` вызывается, например, когда мы просто выводим объект в консоли или берём `repr` от него.
+Если `__str__` не определён, по дефолту его роль будет играть `__repr__`.
+
+Давайте избавимся от метода `print_coords` и добавим нашим точкам хорошее форматирование:
+
+
+```python
+# Для начала убедимся, что по дефолту наши точки не умеют красиво печататься:
+print(f"Некрасивая точка: {Point2D(5, 5)}")
+
+
+class Point2D:
+    """
+    A point in 2D space
+    :param x: x coordinate
+    :param y: y coordinate
+    """
+
+    def __init__(self, x: int, y: int) -> None:
+        # Создаём атрибуты и присваиваем им переданные значения координат
+        self.x = x
+        self.y = y
+
+    def __repr__(self) -> str:
+        return f"Point2D({self.x}, {self.y})"
+
+    def __str__(self) -> str:
+        return f"A 2D point with coordinates ({self.x}, {self.y})"
+
+    def __deepcopy__(self):
+        pass
+
+
+# Посмотрим, что у нас есть теперь:
+print(Point2D(5, 5))
+Point2D(3, 4)
+```
+
+    Некрасивая точка: <__main__.Point2D object at 0x1082d6550>
+    A 2D point with coordinates (5, 5)
+    
+
+
+
+
+    Point2D(3, 4)
+
+
+
+
+```python
+p = Point2D(10, 11)
+p
+```
+
+
+
+
+    Point2D(10, 11)
+
+
+
+
+```python
+print(p)
+p + Point2D(1, 1)
+```
+
+    A 2D point with coordinates (10, 11)
+    
+
+
+    ---------------------------------------------------------------------------
+
+    TypeError                                 Traceback (most recent call last)
+
+    Input In [8], in <cell line: 2>()
+          1 print(p)
+    ----> 2 p + Point2D(1, 1)
+    
+
+    TypeError: unsupported operand type(s) for +: 'Point2D' and 'Point2D'
+
+
+Обратите внимание, что `__str__` вызвался, когда мы запринтили объект, а `__repr__`, когда мы вывели его в конце ячейки.
+
+### \_\_add\_\_, \_\_sub\_\_, \_\_mul\_\_, \_\_truediv\_\_, etc. [(Документация)](https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types)
+
+Методы `__add__`, `__sub__`, `__mul__`, `__truediv__` позволяют добавить классу функционал сложения, вычитания, умножения, деления и так далее, (операторы `+`, `-`, `*`, `/`, etc.). Они вызываются от левого операнда и применяются к правому, возвращая результат. Давайте научим наши точки складываться и вычитаться:
+
+
+```python
+class Point2D:
+    """
+    A point in 2D space
+    :param x: x coordinate
+    :param y: y coordinate
+    """
+
+    def __init__(self, x: int, y: int) -> None:
+        # Создаём атрибуты и присваиваем им переданные значения координат
+        self.x = x
+        self.y = y
+
+    def __repr__(self) -> str:
+        return f"Point2D({self.x}, {self.y})"
+
+    def __str__(self) -> str:
+        return f"A 2D point with coordinates ({self.x}, {self.y})"
+
+    def __add__(self, other: Point2D) -> Point2D:
+        return Point2D(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Point2D) -> Point2D:
+        return Point2D(self.x - other.x, self.y - other.y)
+
+
+print(Point2D(3, 5) + Point2D(4, 7))
+print(Point2D(3, 5) - Point2D(4, 7))
+```
+
+У каждого из вышеописанных методов есть так же версия "i" в начале, отвечающая за операцию с присвоением (`__iadd__` &mdash; `+=`, `__isub__` &mdash; `-=`, etc.)
+
+В принципе, операции с присовением будут работать и так, питон сам выведет их из обычных операций. Но на самом деле они не будут модифицировать объект in-place, а будут возвращать новый объект и присваивать его переменной:
+
+
+```python
+a = Point2D(3, 3)
+print(id(a))
+
+a += Point2D(1, 1)
+print(id(a))
+print(a)
+```
+
+    4435056192
+    
+
+
+    ---------------------------------------------------------------------------
+
+    TypeError                                 Traceback (most recent call last)
+
+    Input In [9], in <cell line: 4>()
+          1 a = Point2D(3, 3)
+          2 print(id(a))
+    ----> 4 a += Point2D(1, 1)
+          5 print(id(a))
+          6 print(a)
+    
+
+    TypeError: unsupported operand type(s) for +=: 'Point2D' and 'Point2D'
+
+
+В данном случае это скорее правильное поведение, но давайте для практики добавим в наш класс эти методы:
+
+
+```python
+class Point2D:
+    """
+    A point in 2D space
+    :param x: x coordinate
+    :param y: y coordinate
+    """
+
+    def __init__(self, x: int, y: int) -> None:
+        # Создаём атрибуты и присваиваем им переданные значения координат
+        self.x = x
+        self.y = y
+
+    def __repr__(self) -> str:
+        return f"Point2D({self.x}, {self.y})"
+
+    def __str__(self) -> str:
+        return f"A 2D point with coordinates ({self.x}, {self.y})"
+
+    def __add__(self, other: Point2D) -> Point2D:
+        return Point2D(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Point2D) -> Point2D:
+        return Point2D(self.x - other.x, self.y - other.y)
+
+    def __iadd__(self, other: Point2D) -> Point2D:
+        self.x += other.x
+        self.y += other.y
+        return self
+
+    def __isub__(self, other: Point2D) -> Point2D:
+        self.x -= other.x
+        self.y -= other.y
+        return self
+```
+
+
+```python
+a = Point2D(3, 3)
+print(id(a))
+
+a += Point2D(2, 2)
+print(id(a))
+print(a)
+
+a += Point2D(2, 2)
+print(id(a))
+print(a)
+```
+
+    4433076576
+    4433076576
+    A 2D point with coordinates (5, 5)
+    4433076576
+    A 2D point with coordinates (7, 7)
+    
+
+Теперь при использовании `+=` мы остаёмся с тем же объектом.
+
+### \_\_eq\_\_, \_\_ne\_\_, \_\_lt\_\_, \_\_le\_\_, \_\_gt\_\_, \_\_ge\_\_,  [(Документация)](https://docs.python.org/3/reference/datamodel.html#object.__lt__)
+
+По умолчанию объекты классов в питоне не имеют порядка и сравниваются на равенство при помощи `is`.
+Таким образом, две точки будут равны друг другу только тогда когда они представляют один и тот же объект в памяти:
+
+
+```python
+a = Point2D(1, 1)
+b = Point2D(1, 1)
+
+a == b, a == a
+```
+
+
+
+
+    (False, True)
+
+
+
+Методы `__eq__`, `__ne__`, `__lt__`, `__le__`, `__gt__`, `__ge__` позволяют задать правила сравнения для объектов класса.
+
+Давайте научим наши точки сравниваться:
+
+
+```python
+class Point2D:
+    """
+    A point in 2D space
+    :param x: x coordinate
+    :param y: y coordinate
+    """
+
+    def __init__(self, x: int, y: int) -> None:
+        # Создаём атрибуты и присваиваем им переданные значения координат
+        self.x = x
+        self.y = y
+
+    def __repr__(self) -> str:
+        return f"Point2D({self.x}, {self.y})"
+
+    def __str__(self) -> str:
+        return f"A 2D point with coordinates ({self.x}, {self.y})"
+
+    def __add__(self, other: Point2D) -> Point2D:
+        return Point2D(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Point2D) -> Point2D:
+        return Point2D(self.x - other.x, self.y - other.y)
+
+    def __iadd__(self, other: Point2D) -> Point2D:
+        self.x += other.x
+        self.y += other.y
+        return self
+
+    def __isub__(self, other: Point2D) -> Point2D:
+        self.x -= other.x
+        self.y -= other.y
+        return self
+
+    def __eq__(self, other: Point2D) -> Point2D:
+        return self.x == other.x and self.y == other.y
+
+    def __del__(self):
+        print("delete", end=" ")
+        print(self)
+
+
+# print(Point2D(1, 1) == Point2D(1, 1))
+# print(Point2D(1, 1) != Point2D(1, 1))
+# print(Point2D(1, 1) == Point2D(1, 2))
+# print(Point2D(1, 1) != Point2D(1, 2))
+
+p = Point2D(1, 1)
+del p
+```
+
+    delete A 2D point with coordinates (1, 1)
+    
+
+Обратите внимание, что когда мы определили `__eq__` (==) для сравнения, `__ne__` (!=) вывелся автоматически. Однако, это исключение. Если мы, например, определим ещё и `__gt__` (>), операция `__le__` (<=) сама не выведется.
+
+**NB**: Если вам хочется написать одну операцию, чтобы остальные вывелись автоматически, используйте декоратор [`functools.total_ordering`](https://docs.python.org/3/library/functools.html#functools.total_ordering)
+
+
+
+
+Кроме описанных в питоне есть ещё великое множество магических методов, которые способны осуществить примерно любое поведение, которое вы видели в питоне. Все их можно посмотреть [в документации](https://docs.python.org/3/reference/datamodel.html#special-method-names) или нагуглить.
+
+Из полезных можно отметить:
+* `__new__` и `__del__` &mdash; создание и удаление объекта.
+* `__len__` &mdash; возвращение длины объекта (например, контейнера). Используется функцией `len`.
+* `__getitem__`, `__setitem__` &mdash; индексация квадратными скобками.
+* `__getattr__`, `__setattr__` &mdash; обращение к атрибутам по точке.
+* `__iter__` &mdash; возвращает итератор, проходящий по объекту. Используется, например, for.
+* `__next__` &mdash; возвращает следующее состояние итератора
+* `__nonzero__` &mdash; определяет поведение функции `bool` на объекте.
+* `__contains__` &mdash; определяет поведение оператора `in` (полезно для контейнеров)
+* `__call__` &mdash; вызывается, когда объект класса вызывается со скобками (как функция). Позволяет сделать объекты класса callable.
+* `__copy__`, `__deepcopy__` &mdash; определяют, как объект класса копируется.
+
+## Копирование
+Переменные в питоне всегда хранят ссылку на объект.  Если мы присвоим объект нашего класса двум разным переменным, они обе будут хранить один и тот же объект и "меняться" вместе:
+
+
+```python
+a = Point2D(3, 4)
+print(a)
+
+b = a
+b.x = -1
+
+print(a)
+
+print(id(a), id(b))
+```
+
+    A 2D point with coordinates (3, 4)
+    A 2D point with coordinates (-1, 4)
+    4433509968 4433509968
+    
+
+Мы поменяли значение в переменной `b`, но значение в `a` тоже поменялось, потому что они ссылаются на один и тот же объект.
+
+Чтобы избежать этого недоразумения в питоне существует модуль `copy` и соответствующая функция:
+
+
+```python
+import copy
+
+a = Point2D(3, 4)
+print(a)
+
+b = copy.copy(a)
+b.x = -1
+
+print(a)
+print(b)
+```
+
+    A 2D point with coordinates (3, 4)
+    delete A 2D point with coordinates (-1, 4)
+    A 2D point with coordinates (3, 4)
+    A 2D point with coordinates (-1, 4)
+    
+
+Однако и это не спасёт нас, если в объекте нашего класса снова хранятся изменяемые переменные (например, списки). В таком случае нам понадобится функция `deepcopy`, которая полностью скопирует как сам объект класса, так и всё внутри него, по сути действуя рекурсивно.
+
+Продемонстрируем это на новом классе `Student`:
+
+
+```python
+import copy
+from typing import Iterable
+
+
+class Student:
+    """
+    A class representing student along with his name and classes he/she takes
+    :param name: name of the student
+    :param classes: iterable of strings with names of classes
+    """
+
+    def __init__(self, name: str, classes: Iterable[str]) -> None:
+        self.name = name
+        self.classes = classes
+
+    def __repr__(self) -> str:
+        return f"Student({repr(self.name)}, {repr(self.classes)})"
+
+
+student = Student("Ваня", ["Линал", "Алгосы", "Машинное обучение"])
+student_deepcopy = copy.deepcopy(student)
+student_copy = copy.copy(student)
+student_naive = student
+
+# Распечатаем студента
+print("До изменений")
+print(student)
+
+student_deepcopy.name = "Катя"
+student_deepcopy.classes[0] = "Матан"
+print("\nИзменения в deepcopy")
+print(f"{student_deepcopy}")
+print(f"{student}")
+
+student_copy.name = "Лиза"
+student_copy.classes[0] = "Экономика"
+print("\nИзменения в copy")
+print(f"{student_copy}")
+print(f"{student}")
+
+student_naive.name = "Лёша"
+student_naive.classes[0] = "Алгебра"
+print("\nИзменения в простом присваивании")
+print(f"{student_naive}")
+print(f"{student}")
+```
+
+    До изменений
+    Student('Ваня', ['Линал', 'Алгосы', 'Машинное обучение'])
+    
+    Изменения в deepcopy
+    Student('Катя', ['Матан', 'Алгосы', 'Машинное обучение'])
+    Student('Ваня', ['Линал', 'Алгосы', 'Машинное обучение'])
+    
+    Изменения в copy
+    Student('Лиза', ['Экономика', 'Алгосы', 'Машинное обучение'])
+    Student('Ваня', ['Экономика', 'Алгосы', 'Машинное обучение'])
+    
+    Изменения в простом присваивании
+    Student('Лёша', ['Алгебра', 'Алгосы', 'Машинное обучение'])
+    Student('Лёша', ['Алгебра', 'Алгосы', 'Машинное обучение'])
+    
+
+Как видим, если мы используем просто `copy`, имя студента действительно не меняется в изначальной переменной `student`, потому что соответствующий атрибут `name` был скопирован. А вот список дисциплин меняется, потому что `copy` скопировал в новый объект **ссылку** на этот список, и мы обращаемся к ней из обоих студентов. `deepcopy` позволяет избежать этой проблемы, потому что он создаст новый список.
+
+## getter, setter
+
+Иногда нам хочется, чтобы чтение или установка атрибута объекта сопровождались какой-нибудь логикой, будь то проверка или ещё что. Предположим, мы создаём класс градусника:
+
+
+```python
+class Thermometer:
+    """
+    Thermometer containing temperature in Celsius
+    :param temperature: temperature to contain
+    """
+
+    def __init__(self, temperature: float) -> None:
+        self.temperature = temperature
+```
+
+У такого класса есть проблема: мы можем присовить ему температуру ниже возможного минимума:
+
+
+```python
+thermometer = Thermometer(10.0)
+thermometer.temperature = -100000.0
+```
+
+
+```python
+del thermometer.temperature
+thermometer.temperature
+```
+
+
+    ---------------------------------------------------------------------------
+
+    AttributeError                            Traceback (most recent call last)
+
+    Input In [19], in <cell line: 2>()
+          1 del thermometer.temperature
+    ----> 2 thermometer.temperature
+    
+
+    AttributeError: 'Thermometer' object has no attribute 'temperature'
+
+
+Мы могли бы решить эту проблему, добавив специальную функцию set_temperature, и сказав, что установка температуры должна происходить только через неё:
+
+
+```python
+class Thermometer:
+    """
+    Thermometer containing temperature in Celsius
+    :param temperature: temperature to contain
+    """
+
+    MINIMAL_TEMPERATURE = -273.15
+
+    def __init__(self, temperature: float) -> None:
+        self.set_temperature(temperature)
+
+    def set_temperature(self, value: float) -> None:
+        if value < Thermometer.MINIMAL_TEMPERATURE:
+            raise ValueError(
+                f"Temperature cannot be less than {Thermometer.MINIMAL_TEMPERATURE}"
+            )
+        self.temperature = value
+
+
+thermometer = Thermometer(10.0)
+thermometer.set_temperature(-100000.0)
+```
+
+
+    ---------------------------------------------------------------------------
+
+    ValueError                                Traceback (most recent call last)
+
+    Input In [20], in <cell line: 16>()
+         13         self.temperature = value
+         15 thermometer = Thermometer(10.)
+    ---> 16 thermometer.set_temperature(-100000.)
+    
+
+    Input In [20], in Thermometer.set_temperature(self, value)
+         10 def set_temperature(self, value: float) -> None:
+         11     if value < Thermometer.MINIMAL_TEMPERATURE:
+    ---> 12         raise ValueError(f"Temperature cannot be less than {Thermometer.MINIMAL_TEMPERATURE}")
+         13     self.temperature = value
+    
+
+    ValueError: Temperature cannot be less than -273.15
+
+
+С таким решением, во-первых, мы теряем удобное присваивание по имени атрибута, а во-вторых, весь код, который до этого использовал temperature напрямую теперь будет работать неправильно. Чтобы избежать этих проблем в python есть декоратор `@property`: он позволяет превратить функцию в атрибут и определить поведение при установке и чтении атрибута:
+
+
+```python
+class Thermometer:
+    """
+    Thermometer containing temperature in Celsius
+    :param temperature: temperature to contain
+    """
+
+    MINIMAL_TEMPERATURE = -273.15
+
+    def __init__(self, temperature: float) -> None:
+        self.temperature = temperature
+
+    @property
+    def temperature(self):
+        pass
+
+    @temperature.setter
+    def temperature(self, value: float) -> None:
+        if value < Thermometer.MINIMAL_TEMPERATURE:
+            raise ValueError(
+                f"Temperature cannot be less than {Thermometer.MINIMAL_TEMPERATURE}"
+            )
+        self._temperature = value
+
+    @temperature.deleter
+    def temperature(self):
+        pass
+
+    @temperature.getter
+    def temperature(self) -> float:
+        return self._temperature * 2
+
+
+thermometer = Thermometer(10.0)
+thermometer.temperature = 20
+print(thermometer.temperature)
+del thermometer.temperature
+print(thermometer.temperature)
+```
+
+    40
+    40
+    
+
+Разберёмся, как это работает. Во-первых, теперь мы будем хранить нашу реальную температуру в переменной `self._temperature`.
+Обращение к этой переменной не будет влечь за собой никакой другой логики, но присваивать ей температуру мы будем только внутри класса, а пользователь снаружи не будет о ней ничего знать и не должен к ней обращаться.
+
+**NB:** Подчёркивание в начале названия атрибута или метода &mdash; это стандартное в питоне обозначение части внутреннего интерфейса класса. Разработчик не обещает, что этот интерфейс не будет меняться в будущих версиях, и пользователь не должен его использовать. Причём сам питон никак не запрещает обращаться к таким атрибутам и методам, просто программисты соблюдают некоторое джентльменское соглашение (цитата из документации)
+
+Сначала мы создаём функцию с названием нашего атрибута (в нашем случае `def temperature`) с декоратором `@property` и в ней возвращаем наше реальное значение температуры (`return self._temperature`). Теперь, когда мы будем обращаться к `thermometer.temperature` будет вызываться эта функция.
+
+Затем мы создаём ещё одну функцию с тем же названием, но теперь с декоратором `@temperature.setter`, в которой проверяем наше условие и присваиваем новое значение нашей внутренней переменной `self._temperature`. Эта функция будет вызываться, когда мы будем присваивать значение `thermometer.temperature`.
+
+## Дескрипторы
+
+Дескрипторы позволяют обобщить это поведение. Допустим, у нас сразу 2 элемента, на которые мы хотим навесить ограничение, чтобы они не были, допустим, отрицательными. Можно прописать свойства для каждого, а можно сделать лучше!
+
+
+```python
+class Order:
+    def __init__(self, name, price, quantity):
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+    def total(self):
+        return self.price * self.quantity
+```
+
+
+```python
+class NonNegative:
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError("Cannot be negative.")
+        instance.__dict__[self.name] = value
+```
+
+
+```python
+class Order:
+    price = NonNegative("price")
+    quantity = NonNegative("quantity")
+
+    def __init__(self, name, price, quantity):
+        self._name = name
+        self.price = price
+        self.quantity = quantity
+
+    def total(self):
+        return self.price * self.quantity
+```
+
+
+```python
+order = Order("apple", 10, 5)
+print(order.total())
+order.quantity = -1
+```
+
+    50
+    
+
+
+    ---------------------------------------------------------------------------
+
+    ValueError                                Traceback (most recent call last)
+
+    Input In [25], in <cell line: 3>()
+          1 order = Order('apple', 10, 5)
+          2 print(order.total())
+    ----> 3 order.quantity = -1
+    
+
+    Input In [23], in NonNegative.__set__(self, instance, value)
+          6 def __set__(self, instance, value):
+          7     if value < 0:
+    ----> 8         raise ValueError('Cannot be negative.')
+          9     instance.__dict__[self.name] = value
+    
+
+    ValueError: Cannot be negative.
+
+
+А теперь уберём ещё немного дублирования! (3.6+)
+
+
+```python
+class NonNegative:
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError("Cannot be negative.")
+        instance.__dict__[self.name] = value
+
+    def __set_name__(self, owner, name):
+        self.name = name
+```
+
+
+```python
+class Order:
+    price = NonNegative()
+    quantity = NonNegative()
+
+    def __init__(self, name, price, quantity):
+        self._name = name
+        self.price = price
+        self.quantity = quantity
+
+    def total(self):
+        return self.price * self.quantity
+```
+
+
+```python
+apple_order = Order("apple", 1, 10)
+print(apple_order.total())
+apple_order.__dict__
+```
+
+    10
+    
+
+
+
+
+    {'_name': 'apple', 'price': 1, 'quantity': 10}
+
+
+
+### `@staticmethod`
+
+Иногда метод объекта никак не использует его атрибуты (не обращается к self), а просто выполняет независимую логику. В таком случае такой метод называется статическим. Мы можем использовать на нём специальный декоратор `@staticmethod`, и тогда мы помимо прочего сможем вызывать его, даже не создавая объект
+
+Попробуем это на примере нашего термометра. Предположим, мы хотим научить его вычислять выдавать температуру в градусах по Фаренгейту. В таком случае нам следует определить метод `get_fahrenheit` и хорошо бы вынести сам перевод в отдельный метод `celsius_to_fahrenheit`:
+
+
+```python
+class Thermometer:
+    """
+    Thermometer containing temperature in Celsius
+    :param temperature: temperature to contain
+    """
+
+    MINIMAL_TEMPERATURE = -273.15
+
+    def __init__(self, temperature: float) -> None:
+        self.temperature = temperature
+
+    @property
+    def temperature(self) -> float:
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, value: float) -> None:
+        if value < Thermometer.MINIMAL_TEMPERATURE:
+            raise ValueError(
+                f"Temperature cannot be less than {Thermometer.MINIMAL_TEMPERATURE}"
+            )
+        self._temperature = value
+
+    def celsius_to_fahrenheit(self, value) -> float:
+        return value * 1.8 + 32
+
+    def get_fahrenheit(self) -> float:
+        return self.celsius_to_fahrenheit(self.temperature)
+
+
+thermometer = Thermometer(10.0)
+print(
+    f"{thermometer.temperature} градусов по Цельсию равны {thermometer.get_fahrenheit()} градусов по Фаренгейту"
+)
+```
+
+    10.0 градусов по Цельсию равны 50.0 градусов по Фаренгейту
+    
+
+Наша функция `celsius_to_fahrenheit` просто переводит температуру, которую получает на вход. Она никак не использует `self`. Давайте сделаем её статическим методом.
+
+
+```python
+class Thermometer:
+    """
+    Thermometer containing temperature in Celsius
+    :param temperature: temperature to contain
+    """
+
+    MINIMAL_TEMPERATURE = -273.15
+
+    def __init__(self, temperature: float) -> None:
+        self.temperature = temperature
+
+    @property
+    def temperature(self) -> float:
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, value: float) -> None:
+        if value < Thermometer.MINIMAL_TEMPERATURE:
+            raise ValueError(
+                f"Temperature cannot be less than {Thermometer.MINIMAL_TEMPERATURE}"
+            )
+        self._temperature = value
+
+    @staticmethod
+    def celsius_to_fahrenheit(value) -> float:
+        return value * 1.8 + 32
+
+    def get_fahrenheit(self) -> float:
+        return self.celsius_to_fahrenheit(self.temperature)
+
+
+Thermometer.celsius_to_fahrenheit(10)
+thermometer = Thermometer(10)
+```
+
+Обратите внимание, что мы всё так же можем вызывать функцию от объекта класса (как, например, от `self` в `get_fahrenheit`). Но так же теперь мы можем вызывать её и от самого класса:
+
+
+```python
+Thermometer.celsius_to_fahrenheit(10.0)
+```
+
+
+
+
+    50.0
+
+
+
+### `@classmethod`
+
+Бывает и другая ситуация. Когда метод не использует атрибуты объекта (не обращается к `self`), но использует знание о том, из какого класса он вызывается. Такой метод называется методом класса и мы можем обозначить его декоратором `@classmethod`. Метод с декоратором `@classmethod` принимает в качестве первого аргумента не объект класса (`self`), а сам класс (`cls`).
+
+Предположим, мы хотим уметь создавать наш термометр сразу из температуры по Фаренгейту. Но наш `__init__` принимает температуру в градусах Цельсия. Создадим новый метод класса `from_fahrenheit`, который будет переводить полученную температуру из Фаренгейта в Цельсии (при помощи нового статического метода `fahrenheit_to_celsius` и возвращать новый объект класса:
+
+
+```python
+class Thermometer:
+    """
+    Thermometer containing temperature in Celsius
+    :param temperature: temperature to contain
+    """
+
+    MINIMAL_TEMPERATURE = -273.15
+
+    def __init__(self, temperature: float) -> None:
+        self.temperature = temperature
+
+    @property
+    def temperature(self) -> float:
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, value: float) -> None:
+        if value < Thermometer.MINIMAL_TEMPERATURE:
+            raise ValueError(
+                f"Temperature cannot be less than {Thermometer.MINIMAL_TEMPERATURE}"
+            )
+        self._temperature = value
+
+    @staticmethod
+    def celsius_to_fahrenheit(value) -> float:
+        return value * 1.8 + 32
+
+    @staticmethod
+    def fahrenheit_to_celsius(value) -> float:
+        return (value - 32) / 1.8
+
+    def get_fahrenheit(self) -> float:
+        print(type(self))
+        return self.celsius_to_fahrenheit(self.temperature)
+
+    @classmethod
+    def from_fahrenheit(cls, temperature_fahrenheit) -> Thermometer:
+        temperature_celsius = cls.fahrenheit_to_celsius(temperature_fahrenheit)
+        print(type(cls))
+        return cls(temperature_celsius)
+```
+
+Теперь мы можем создать термометер из градусов по Фаренгейту:
+
+
+```python
+thermometer = Thermometer(10)
+thermometer.from_fahrenheit(100)
+```
+
+    <class 'type'>
+    
+
+
+
+
+    <__main__.Thermometer at 0x108273dc0>
+
+
+
+## Наследование, `super()`
+
+Одним из главных механизмов ООП является наследование. Класс может отнаследоваться от другого класса, тем самым получая доступ к его методам и атрибутам. Класс-ребёнок может добавлять свои новые методы и переопределять методы класса-родителя, но так же может использовать и все методы, определённые в классе родителе. Родительский класс в питоне указывается в скобках после названия класса во время объявления: `class Children(Parent)`. Причём один класс может быть ребёнком сразу нескольких классов. В таком случае они перечисляются через запятую.
+
+Попробуем создать общий класс `Person`, который будет иметь атрибут `name` и сможет представляться при помощи метода `introduce`:
+
+
+```python
+class Person:
+    """
+    A class representing a person with a name that can introduce himself
+    :param name: the name of the person
+    """
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def introduce(self) -> None:
+        print(f"Hello, my name is {self.name}")
+
+    @classmethod
+    def f(cls):
+        print(cls)
+
+    def __str__(self) -> str:
+        return f"A person named {self.name}"
+
+
+person = Person("Dima")
+person.introduce()
+print(person)
+```
+
+    Hello, my name is Dima
+    A person named Dima
+    
+
+
+```python
+type(Person)
+```
+
+
+
+
+    type
+
+
+
+Теперь создадим подклассы Teacher и Student. Помимо имени у преподавателя будет поле `discipline`, а у студента поле `marks`:
+
+
+```python
+from typing import Dict
+
+
+class Teacher(Person):
+    """
+    A class representing a teacher with his discipline
+    :param name: the name of the teacher
+    :param discipline: the discipline taught by the teacher
+    """
+
+    def __init__(self, name: str, discipline: str) -> None:
+        super().__init__(name)  # Вызываем __init__ класса-родителя
+        self.discipline = discipline
+
+    def __str__(self) -> str:
+        return f"A teacher named {self.name} who teaches {self.discipline}"
+
+
+class Student(Person):
+    """
+    A class representing a student and his marks
+    :param name: the name of the student
+    :param marks: a dict of disciplines as keys and marks as values
+    """
+
+    def __init__(self, name: str, marks: Dict[str, int]) -> None:
+        super().__init__(name)  # Вызываем __init__ класса-родителя
+        self.marks = marks
+
+    def __str__(self) -> str:
+        return f"A student named {self.name} with marks {self.marks}"
+
+
+teacher = Teacher("Evgeny", "Machine Learning")
+teacher.introduce()
+print(teacher)
+print()
+
+student = Student("Liza", {"Calculus": 5, "Machine Learning": 10})
+student.introduce()
+print(student)
+```
+
+    Hello, my name is Evgeny
+    A teacher named Evgeny who teaches Machine Learning
+    
+    Hello, my name is Liza
+    A student named Liza with marks {'Calculus': 5, 'Machine Learning': 10}
+    
+
+
+```python
+persons = []
+persons.append(person)
+persons.append(teacher)
+persons.append(student)
+
+for i in persons:
+    i.f()
+```
+
+    <class '__main__.Person'>
+    <class '__main__.Teacher'>
+    <class '__main__.Student'>
+    
+
+Теперь любой код, который использует метод `introduce` может работать как с классом `Person`, так и с классами `Teacher` и `Student`.
+
+И в то же время, ни в одном из этих классов мы не прописывали функцию `introduce`, потому что она уже есть в родительском классе `Person`, так что мы избежали дублирования кода и объединили объекты со схожей логикой между собой.
+
+Стоит обратить особое внимание на оператор `super()`. Все методы, вызывающиеся от `super()`, будут вызваны от родительского класса (классов) объекта. Таким образом, когда мы вызываем `super().__init__(name)` в классах `Teacher` и `Student` мы выполняем код из метода `__init__` родительского класса `Person`: `self.name = name`, то есть определяем в объекте атрибут `name`. А затем уже мы добавляем новые атрибуты. Если функция `__init__` в родительском классе как-то поменяется, у нас ничего не сломается, и эти изменения будут использоваться и в дочерних классах.
+
+Так же следует обратить внимание на то, что метод `__str__` определён как в родительсом классе `Person`, так и в дочерних `Teacher` и `Student`. Таким образом, дочерние классы переопределяют этот метод, и при вызове `print` или `str` от объектов дочерних классов будет вызыван их метод `__str__`, а не родительский.
+
+Мы могли бы использовать `super()` и не только в `__init__`, например, чтобы расширить функционал представления:
+
+
+```python
+class Teacher(Person):
+    """
+    A class representing a teacher with his discipline
+    :param name: the name of the teacher
+    :param discipline: the discipline taught by the teacher
+    """
+
+    def __init__(self, name: str, discipline: str) -> None:
+        super().__init__(name)  # Вызываем __init__ класса-родителя
+        self.discipline = discipline
+
+    def introduce(self) -> None:
+        super().introduce()
+        print(f"I teach {self.discipline}")
+
+    def __str__(self) -> str:
+        return f"A teacher named {self.name} who teaches {self.discipline}"
+
+
+teacher = Teacher("Evgeny", "Machine Learning")
+teacher.introduce()
+```
+
+    Hello, my name is Evgeny
+    I teach Machine Learning
+    
+
+Кроме того мы могли бы определить в дочерних классах совершенно новые методы, которых нет в классе-родителе:
+
+
+```python
+class Student(Person):
+    """
+    A class representing a student and his marks
+    :param name: the name of the student
+    :param marks: a dict of disciplines as keys and marks as values
+    """
+
+    def __init__(self, name: str, marks) -> None:
+        super().__init__(name)  # Вызываем __init__ класса-родителя
+        self.marks = marks
+
+    def __str__(self) -> str:
+        return f"A student named {self.name} with marks {self.marks}"
+
+    def get_fails(self):
+        """
+        Gets failed disciplines
+        """
+        return {discipline: mark for discipline, mark in self.marks.items() if mark < 4}
+
+
+student = Student("Liza", {"Calculus": 3, "Machine Learning": 10})
+student.introduce()
+print(f"Failed disciplines: {student.get_fails()}")
+```
+
+    Hello, my name is Liza
+    Failed disciplines: {'Calculus': 3}
+    
+
+Мы разобрали очень простой пример наследования. На практике деревья наследования могут быть очень большими, один класс может иметь множество детей и множество родителей. В таких случаях может стать непонятно, в каком именно порядке питон обходит родителей класса, чтобы понять, чью реализацию того или иного метода использовать.
+
+Чтобы посмотреть этот порядок можно использовать атрибут **класса** `__mro__` (Method Resolution Order):
+
+
+```python
+Student.__mro__
+```
+
+
+
+
+    (__main__.Student, __main__.Person, object)
+
+
+
+Мы видим, что если мы попытаемся вызвать у объекта класса `Student`, например, метод `introduce`, то сначала питон попытается найти его реализацию в самом классе `Student`. Если там её не окажется, он попробует класс `Person`, а если и там нет, то родительский класс всех классов `object`. (А если и там нет, то выдаст `AttributeError`)
+
+Подробнее про то, как именно питон определяет этот порядок, можно почитать, например, [тут](https://habr.com/ru/post/62203/).
+
+## ABC &mdash; Abstract Base Classes
+
+Бывает так, что мы хотим обозначить какой-то список методов, которые должны реализовывать все классы одного семейства, но не можем предоставить дефолтной реализации для этих методов. Например, нам нужно написать код, который вычислял бы сумму площадей или периметров списка фигур, но для каждого типа фигуры эти величины вычисляются по-своему, а всё же хотелось бы как-то объединить их всех в один родительский класс и показать, какими методами должна обладать фигура.
+
+В таком случае нам на помощь приходит модуль `abc` и декоратор `@abstractmethod`. Если мы отнаследуем наш класс от класса `abc.ABC` и добавим к методам декоратор `@abc.abstractmethod`, все классы, наследующиеся от нашего будут обязаны объявить эти методы, а иначе питон выдаст ошибку.
+
+Давайте поробуем:
+
+
+```python
+import abc
+
+
+class Shape(abc.ABC):
+    """
+    Shape class capable of calculating its area and perimeter
+    """
+
+    @abc.abstractmethod
+    def get_area(self) -> float:
+        """
+        Method for getting the area of the shape
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_perimeter(self) -> float:
+        """
+        Method for getting the perimeter of the shape
+        """
+        pass
+```
+
+Попробуем создать класс, который наследуется от `Shape`, но не реализует эти методы:
+
+
+```python
+class BadShape(Shape):
+    pass
+
+
+bad_shape = BadShape()
+```
+
+
+    ---------------------------------------------------------------------------
+
+    TypeError                                 Traceback (most recent call last)
+
+    Input In [42], in <cell line: 4>()
+          1 class BadShape(Shape):
+          2     pass
+    ----> 4 bad_shape = BadShape()
+    
+
+    TypeError: Can't instantiate abstract class BadShape with abstract methods get_area, get_perimeter
+
+
+Как видим питон не дал нам создать объект такого класса (но сам класс создать дал!)
+
+Так же мы не сможем создать объект самого абстрактного класса `Shape`:
+
+
+```python
+shape = Shape()
+```
+
+
+    ---------------------------------------------------------------------------
+
+    TypeError                                 Traceback (most recent call last)
+
+    Input In [43], in <cell line: 1>()
+    ----> 1 shape = Shape()
+    
+
+    TypeError: Can't instantiate abstract class Shape with abstract methods get_area, get_perimeter
+
+
+Теперь реализуем нормальные фигуры:
+
+
+```python
+import math
+
+
+class Circle(Shape):
+    """
+    A circle with a some radius
+    """
+
+    def __init__(self, radius: float) -> None:
+        self.radius = radius
+
+    def get_area(self) -> float:
+        return math.pi * self.radius**2
+
+    def get_perimeter(self) -> float:
+        return 2 * math.pi * self.radius
+
+
+class Rectangle(Shape):
+    """
+    A rectangle with some width and height
+    """
+
+    def __init__(self, width: float, height: float) -> None:
+        self.width = width
+        self.height = height
+
+    def get_area(self) -> float:
+        return self.width * self.height
+
+    def get_perimeter(self) -> float:
+        return 2 * (self.width + self.height)
+```
+
+Теперь мы можем написать функции, которая будет работать с нашими объектами `Shape`, и они могут быть уверены, что все классы, наследующиеся от `Shape` будут реализовывать нужные им методы:
+
+
+```python
+def get_areas_sum(shapes):
+    # Проверяем, что все наши объекты наследуются от Shape:
+    for shape in shapes:
+        if not isinstance(shape, Shape):
+            raise ValueError(
+                f"Only Shape objects are allowed, you tried to pass object of type {type(shape)}"
+            )
+    # if not all(isinstance(shape, Shape) for shape in shapes):
+    #   raise ValueError("Only Shape objects are allowed")
+    return sum(shape.get_area() for shape in shapes)
+
+
+def get_perimeters_sum(shapes):
+    # Проверяем, что все наши объекты наследуются от Shape:
+    if not all(isinstance(shape, Shape) for shape in shapes):
+        raise ValueError("Only Shape objects are allowed")
+    return sum(shape.get_perimeter() for shape in shapes)
+```
+
+Попробуем использовать наши функции по назначению:
+
+
+```python
+my_circle = Circle(10)
+del my_circle.radius
+```
+
+
+```python
+print(get_areas_sum([Circle(1.0), Rectangle(1.0, 1.0)]))
+print(get_areas_sum([Circle(1.0), Circle(2.0), Rectangle(3.0, 2.0), my_circle]))
+
+print(get_perimeters_sum([Circle(1.0), Rectangle(1.0, 1.0)]))
+print(get_perimeters_sum([Circle(1.0), Circle(2.0), Rectangle(3.0, 2.0)]))
+```
+
+    4.141592653589793
+    
+
+
+    ---------------------------------------------------------------------------
+
+    AttributeError                            Traceback (most recent call last)
+
+    Input In [47], in <cell line: 2>()
+          1 print(get_areas_sum([Circle(1.), Rectangle(1., 1.)]))
+    ----> 2 print(get_areas_sum([Circle(1.), Circle(2.), Rectangle(3., 2.), my_circle]))
+          4 print(get_perimeters_sum([Circle(1.), Rectangle(1., 1.)]))
+          5 print(get_perimeters_sum([Circle(1.), Circle(2.), Rectangle(3., 2.)]))
+    
+
+    Input In [45], in get_areas_sum(shapes)
+          5         raise ValueError(f"Only Shape objects are allowed, you tried to pass object of type {type(shape)}")
+          6 # if not all(isinstance(shape, Shape) for shape in shapes):
+          7 #   raise ValueError("Only Shape objects are allowed")
+    ----> 8 return sum(shape.get_area() for shape in shapes)
+    
+
+    Input In [45], in <genexpr>(.0)
+          5         raise ValueError(f"Only Shape objects are allowed, you tried to pass object of type {type(shape)}")
+          6 # if not all(isinstance(shape, Shape) for shape in shapes):
+          7 #   raise ValueError("Only Shape objects are allowed")
+    ----> 8 return sum(shape.get_area() for shape in shapes)
+    
+
+    Input In [44], in Circle.get_area(self)
+         10 def get_area(self) -> float:
+    ---> 11     return math.pi * self.radius ** 2
+    
+
+    AttributeError: 'Circle' object has no attribute 'radius'
+
+
+Попробуем подать неправильные объекты:
+
+
+```python
+print(get_areas_sum([Circle(1.0), Rectangle(1.0, 1.0), "STRING"]))
+```
+
+
+    ---------------------------------------------------------------------------
+
+    ValueError                                Traceback (most recent call last)
+
+    Input In [48], in <cell line: 1>()
+    ----> 1 print(get_areas_sum([Circle(1.), Rectangle(1., 1.), "STRING"]))
+    
+
+    Input In [45], in get_areas_sum(shapes)
+          3 for shape in shapes:
+          4     if not isinstance(shape, Shape):
+    ----> 5         raise ValueError(f"Only Shape objects are allowed, you tried to pass object of type {type(shape)}")
+          6 # if not all(isinstance(shape, Shape) for shape in shapes):
+          7 #   raise ValueError("Only Shape objects are allowed")
+          8 return sum(shape.get_area() for shape in shapes)
+    
+
+    ValueError: Only Shape objects are allowed, you tried to pass object of type <class 'str'>
+
+
+Питон так же имеет множество встроенных абстрактных классов, которые вы можете использовать, для проверки того, что объект удовлетворяет определённому интерфейсу: https://docs.python.org/3/library/collections.abc.html
+
+
+```python
+from collections.abc import *
+
+
+class MyStorage(Sequence):
+    def __getitem__(self):
+        pass
+
+    def __len__(self):
+        pass
+
+
+storage = MyStorage()
+```
+
+### [Dataclasses](https://docs.python.org/3/library/dataclasses.html)
+
+Зачастую нам нужен небольшой класс, который не имеет своих методов, но просто хранит в себе какие-то данные. Например, класс человека с именем, фамилией и возрастом.
+
+Если мы напишем для такой цели полноценный питоновский класс, мы получим громоздкую конструкцию с множеством повторений:
+
+
+```python
+class Person:
+    def __init__(self, name, surname, age):
+        self.name = name
+        self.surname = surname
+        self.age = age
+
+
+person = Person("Stern", "Morgenov", 13)
+person
+```
+
+
+
+
+    <__main__.Person at 0x108625b80>
+
+
+
+И это мы не ещё определили такие методы как `__repr__` и `__eq__` для понятного представления и сравнения людей.
+
+Чтобы не заниматься всей этой ерундой питон предоставляет удобный способ создания классов, нужных исключительно для хранения данных, определённый во встроенном модуле `dataclasses`:
+
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass
+class Person:
+    name: str
+    surname: str
+    age: int
+
+    def birthday(self):
+        self.age += 1
+
+
+person = Person("Stern", "Morgenov", 13)
+print(person)
+person.birthday()
+print(person)
+```
+
+    Person(name='Stern', surname='Morgenov', age=13)
+    Person(name='Stern', surname='Morgenov', age=14)
+    
+
+Стоит отметить, что аннотация типов тут является обязательной частью синтаксиса.
+Данная конструкция автоматически создаёт для нас класс `Person` с определёнными методами `__init__`, `__repr__` и даже `__eq__`.
+
+При создании объекта параметры будут подаваться в том же порядке, в котором они объявлены в классе.
+
+Более тонко настроить, какие именно методы будут автоматически добавляться можно при помощи параметров самого декоратора. Например, если мы не хотим, чтобы за нас создавали `__repr__`, мы можем сделать так:
+
+
+```python
+@dataclass(repr=False)
+class PersonWORepr:
+    name: str
+    surname: str
+    age: int
+
+
+person_wo_repr = PersonWORepr("Stern", "Morgenov", 13)
+person_wo_repr
+```
+
+
+
+
+    <__main__.PersonWORepr at 0x1084666a0>
+
+
+
+Как видим, метод `__repr__` не добавился, и информация об объекте красиво не вывелась.
+
+dataclass'ы поддерживают значения по умолчанию:
+
+
+```python
+@dataclass
+class PersonWithDefaultAge:
+    name: str
+    surname: str
+    age: int = 28
+
+
+person_with_default_age = PersonWithDefaultAge("Stern", "Morgenov")
+person_with_default_age
+```
+
+
+
+
+    PersonWithDefaultAge(name='Stern', surname='Morgenov', age=28)
+
+
+
+Как и в аргументах функций, все переменные со значениями по умолчанию должны стоять после всех переменных без них.
+
+Last but not least, иногда вам может быть нужна дополнительная логика при задании полей dataclass'а. Например, вы хотите добавить изменяемый объект в качестве значения по умолчанию. Для таких случаев в модуле `dataclasses` есть `field`:
+
+
+```python
+from dataclasses import field
+from typing import List
+
+
+@dataclass
+class Student:
+    name: str
+    surname: str
+    age: int = 28
+    classes: List[int] = field(default_factory=lambda: [1, 2, 3])
+
+
+student = Student("Stern", "Morgenov")
+print(student)
+student.somename = 100
+print(student.__dict__)
+del student.name
+print(student)
+```
+
+    Student(name='Stern', surname='Morgenov', age=28, classes=[1, 2, 3])
+    {'name': 'Stern', 'surname': 'Morgenov', 'age': 28, 'classes': [1, 2, 3], 'somename': 100}
+    
+
+
+    ---------------------------------------------------------------------------
+
+    AttributeError                            Traceback (most recent call last)
+
+    Input In [54], in <cell line: 16>()
+         14 print(student.__dict__)
+         15 del student.name
+    ---> 16 print(student)
+    
+
+    File /usr/local/anaconda3/envs/ml/lib/python3.9/dataclasses.py:370, in _recursive_repr.<locals>.wrapper(self)
+        368 repr_running.add(key)
+        369 try:
+    --> 370     result = user_function(self)
+        371 finally:
+        372     repr_running.discard(key)
+    
+
+    File <string>:3, in __repr__(self)
+    
+
+    AttributeError: 'Student' object has no attribute 'name'
+
+
+Параметр `default_factory` в `field` принимает функцию, которая создаёт дефолтное значение.
+(Подробнее, почему изменяемые объекты в дефолтах &mdash; это плохо, спросите у семинариста или почитайте [тут](https://docs.quantifiedcode.com/python-anti-patterns/correctness/mutable_default_value_as_argument.html))
+
+dataclass'ы также поддерживают наследование.
+
+Подробнее о dataclass'ах можно почитать [в документации](https://docs.python.org/3/library/dataclasses.html) или [тут](https://habr.com/ru/post/415829/).
+
+## Слоты
+
+Чтобы сделать наши классы ещё более управляемыми, мы можем жёстко ограничить используемые имена атрибутов!
+
+
+
+```python
+class SlotsClass:
+
+    __slots__ = ("foo", "bar")
+```
+
+
+```python
+obj = SlotsClass()
+obj.foo = 5
+print(obj.foo)
+obj.bar = 100
+obj.bar
+```
+
+    5
+    
+
+
+
+
+    100
+
+
+
+
+```python
+obj.another_attribute = "Elvis has left the building"
+```
+
+
+    ---------------------------------------------------------------------------
+
+    AttributeError                            Traceback (most recent call last)
+
+    Input In [57], in <cell line: 1>()
+    ----> 1 obj.another_attribute = 'Elvis has left the building'
+    
+
+    AttributeError: 'SlotsClass' object has no attribute 'another_attribute'
+
+
+
+```python
+del obj.bar
+```
+
+
+```python
+obj.bar
+```
+
+
+    ---------------------------------------------------------------------------
+
+    AttributeError                            Traceback (most recent call last)
+
+    Input In [59], in <cell line: 1>()
+    ----> 1 obj.bar
+    
+
+    AttributeError: bar
+
+
+### Классы-декораторы
+
+
+```python
+class Repeater:
+    def __init__(self, n):
+        self.n = n
+
+    def __call__(self, f):
+        def wrapper(*args, **kwargs):
+            for _ in range(self.n):
+                f(*args, **kwargs)
+
+        return wrapper
+
+
+@Repeater(3)
+def foo(a, b):
+    print("foo")
+
+
+foo(1, 2)
+```
+
+    foo
+    foo
+    foo
+    
+
+Отступление. Обработка ошибок:
+
+
+```python
+class MyError(ValueError):
+    pass
+```
+
+
+```python
+try:
+    n = int("weew")
+    data = n / 0
+    raise (MyError("some error happened"))
+    # raise(BaseException())
+except MyError as e:
+    print(e)
+    print("My Error")
+except ValueError as e:
+    print(e)
+    print("Could not convert!")
+except ArithmeticError as e:
+    print(e)
+    print("Could not divide by zero!")
+else:
+    print("else")
+finally:
+    print("finish")
+```
+
+    invalid literal for int() with base 10: 'weew'
+    Could not convert!
+    finish
+    
+
+И декораторы для классов!
+
+
+```python
+import time
+
+
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        delta = (te - ts) * 1000
+        print(f"{method.__name__} took {delta} ms")
+        return result
+
+    return timed
+
+
+def time_all_methods(cls):
+    class NewCls:
+        def __init__(self, *args, **kwargs):
+            self._obj = cls(*args, **kwargs)
+
+        def __getattribute__(self, s):
+            try:
+                x = super().__getattribute__(s)
+            except AttributeError:
+                pass
+            else:
+                return x
+            attr = self._obj.__getattribute__(s)
+            if isinstance(attr, type(self.__init__)):
+                return timeit(attr)
+            else:
+                return attr
+
+    return NewCls
+
+
+@time_all_methods
+class Foo:
+    def func(self):
+        print("start")
+        time.sleep(0.56)
+        print("end")
+
+
+f = Foo()
+f.func()
+```
+
+    start
+    end
+    func took 562.755823135376 ms
+    
+
+
+```python
+class SelfCount:
+    __count = 0
+
+    def __init__(self):
+        SelfCount.__count += 1
+
+    def get_count(self):
+        return SelfCount.__count
+
+    def set_count(self, value):
+        return
+
+    def del_count(self):
+        return
+
+    def __del__(self):
+        SelfCount.__count -= 1
+
+    count = property(get_count, set_count, del_count)
+```

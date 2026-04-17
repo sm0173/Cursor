@@ -1,0 +1,2413 @@
+Источник: Seminar_22_Jupyter_To_Prod.ipynb
+
+---
+
+# Программирование на Python, БИ
+
+## НИУ ВШЭ, 2025-26 учебный год
+
+# Семинар 22. От Jupyter к Production
+
+На лекции мы познакомились с основными инструментами, необходимыми для работы в современной разработке.
+
+Сегодня мы потрогаем часть из них своими руками, соберём из них рабочую среду и в ней реализуем мини-проект.
+
+Мы увидим, как код живёт в файлах, как он может упаковываться, и как запускаться через bash, одного из интерпретаторов командной строки.
+
+## 1. Командная строка (Bash)
+
+### Синтаксис Bash
+
+Ниже представлен основной список команд, его подробно разбирать не надо, это скорее как справочник, лучше сразу переходить к выполнению каких-то простых команд для интуитивного понимания работы с командной строкой
+
+#### Навигация по файловой системе
+
+* `pwd` — **P**rint **W**orking **D**irectory — показывает текущую директорию (где вы сейчас находитесь)
+
+* `ls` — **L**i**S**t — показывает список файлов и папок в текущей директории
+  
+  `ls -l` — подробный список (права, размер, дата)
+  
+  `ls -a` — показать все файлы, включая скрытые (начинающиеся с `.`)
+  
+  `ls -la` — комбинация: подробный список всех файлов
+
+* `cd` — **C**hange **D**irectory — перейти в другую директорию
+  
+  `cd folder` — перейти в папку folder
+  
+  `cd ..` — перейти на уровень выше (в родительскую папку)
+  
+  `cd ~` — перейти в домашнюю директорию
+  
+  `cd /` — перейти в корень файловой системы
+
+#### Работа с файлами и папками
+
+* `mkdir` — **M**a**K**e **DIR**ectory — создать новую папку
+  
+  `mkdir folder` — создать папку с именем folder
+  
+  `mkdir -p path/to/folder` — создать папку со всеми промежуточными директориями
+
+* `touch` — создать пустой файл или обновить время модификации существующего
+  
+  `touch file.txt` — создать файл file.txt
+
+* `cp` — **C**o**P**y — копировать файл или папку
+  
+  `cp source.txt dest.txt` — копировать файл
+  
+  `cp -r folder1 folder2` — копировать папку рекурсивно
+
+* `mv` — **M**o**V**e — переместить или переименовать файл/папку
+  
+  `mv old.txt new.txt` — переименовать файл
+  
+  `mv file.txt folder/` — переместить файл в папку
+
+* `rm` — **R**e**M**ove — удалить файл или папку
+  
+  `rm file.txt` — удалить файл
+  
+  `rm -r folder` — удалить папку рекурсивно
+
+#### Просмотр содержимого файлов
+
+* `cat` — con**CAT**enate — показать всё содержимое файла
+  
+  `cat file.txt` — вывести содержимое file.txt
+
+* `head` — показать первые строки файла
+  
+  `head file.txt` — первые 10 строк (по умолчанию)
+  
+  `head -n 5 file.txt` — первые 5 строк
+
+* `tail` — показать последние строки файла
+  
+  `tail file.txt` — последние 10 строк
+  
+  `tail -n 5 file.txt` — последние 5 строк
+
+* `less` — постраничный просмотр файла (не работает в Google Colab)
+
+#### Создание и запись в файлы
+
+* `echo` — вывести текст или записать его в файл
+  
+  `echo "text"` — просто вывести text
+  
+  `echo "text" > file.txt` — записать text в файл (перезапись)
+  
+  `echo "text" >> file.txt` — добавить text в конец файла
+
+* `>` — перенаправление вывода в файл (перезапись содержимого)
+
+* `>>` — перенаправление вывода в файл (добавление в конец)
+
+#### Поиск и фильтрация
+
+* `grep` — **G**lobal **R**egular **E**xpression **P**rint — поиск текста по паттерну
+  
+  `grep "pattern" file.txt` — найти строки, содержащие pattern
+  
+  `grep -i "pattern" file.txt` — игнорировать регистр
+  
+  `grep -n "pattern" file.txt` — показать номера строк
+  
+  `grep -v "pattern" file.txt` — инвертировать поиск (строки БЕЗ pattern)
+
+* `find` — поиск файлов по имени или другим критериям
+  
+  `find . -name "*.txt"` — найти все .txt файлы в текущей папке
+  
+  `find . -type f` — найти только файлы (не папки)
+  
+  `find . -type d` — найти только папки
+
+* `wc` — **W**ord **C**ount — подсчёт строк, слов, символов
+  
+  `wc file.txt` — вывести количество строк, слов и байт
+  
+  `wc -l file.txt` — только количество строк
+  
+  `wc -w file.txt` — только количество слов
+
+#### Комбинирование команд
+
+* `|` — **pipe** (конвейер) — передать вывод одной команды на вход другой
+  
+  `cat file.txt | grep "error"` — найти строки с "error" в файле
+  
+  `ls -la | grep ".txt"` — найти только .txt файлы в списке
+
+* `&&` — выполнить следующую команду, только если предыдущая успешна
+  
+  `mkdir folder && cd folder` — создать папку И перейти в неё
+
+* `;` — выполнить команды последовательно (независимо от результата)
+  
+  `cd folder; ls` — перейти в папку; показать содержимое
+
+#### Полезные утилиты
+
+* `sort` — отсортировать строки
+  
+  `sort file.txt` — сортировать по алфавиту
+  
+  `sort -r file.txt` — обратная сортировка
+  
+  `sort -n file.txt` — числовая сортировка
+
+* `uniq` — убрать дублирующиеся строки (работает только на отсортированных данных!)
+  
+  `sort file.txt | uniq` — убрать дубликаты
+
+* `sed` — **S**tream **ED**itor — поиск и замена текста
+  
+  `sed 's/old/new/' file.txt` — заменить первое вхождение old на new
+  
+  `sed 's/old/new/g' file.txt` — заменить все вхождения
+  
+  `sed -i 's/old/new/g' file.txt` — заменить в самом файле (**i**n-place)
+
+#### Переменные и окружение
+
+* `$VARIABLE` — обращение к переменной
+  
+  `echo $HOME` — вывести путь к домашней директории
+  
+  `echo $PATH` — вывести переменную PATH
+
+* `export` — установить переменную окружения
+  
+  `export MY_VAR="value"` — создать переменную MY_VAR
+
+#### Специальные символы
+
+* `*` — **wildcard** (шаблон) — любое количество любых символов
+  
+  `ls *.txt` — все файлы с расширением .txt
+  
+  `rm test*` — удалить все файлы, начинающиеся с test
+
+* `?` — ровно один любой символ
+  
+  `ls file?.txt` — найдёт file1.txt, fileA.txt, но не file10.txt
+
+* `~` — домашняя директория текущего пользователя
+  
+  `cd ~` — перейти домой
+
+* `.` — текущая директория
+
+* `..` — родительская директория (уровень выше)
+
+
+### Важно: Выполнение Bash-команд в Google Colab и Jupyter Notebook
+
+В Google Colab и Jupyter Notebook можно выполнять bash-команды прямо из ячеек! Вы уже сталкивались с этим, когда устанавливали недостающие модули через `!pip install`.
+
+#### Специальные символы для выполнения команд
+
+* **`!`** — выполнить bash-команду из ячейки (с данным символом доступно выполнение всех основных команд bash)
+  
+  ```python
+  !ls -la
+  !pwd
+  !pip install pandas
+  !cat file.txt
+
+Каждая команда с **`!`** выполняется в новом процессе, поэтому состояние не сохраняется между ячейками.
+
+* **`%`** - magic-команды IPython (сохраняют состояние между ячейками)
+
+  ```python
+  %cd my_folder    # перейти в папку (состояние сохраняется!)
+  %pwd             # показать текущую директорию
+  %ls              # список файлов
+
+* **`%%writefile`** - записать всё содержимое ячейки в файл
+
+  ```python
+  %%writefile script.py
+  print("Hello, World!")
+  print("This is a Python script")
+
+* c **`%`** можно выполнять достаточно ограниченное количество команд, большинство делается через **`!`**, либо просто через терминал без этих спец. символов
+
+В ноутбуке семинара все команды будут записаны через ячейки — их можно запускать последовательно.
+
+Однако **строго рекомендуется** дополнительно попробовать выполнить большинство команд через встроенный терминал Google Colab, чтобы почувствовать, как это работает на настоящем сервере.
+
+
+
+Посмотрим примеры команд:
+
+Давайте поймем, в какой директории мы сейчас находимся:
+
+
+
+```python
+!pwd
+```
+
+    /content
+    
+
+Что в этой директории лежит:
+
+
+```python
+!ls
+```
+
+    my_project  __pycache__  sample_data
+    
+
+Поднимемся в корневую директорию системы и посмотрим, что там есть:
+
+
+```python
+!cd .. && ls
+```
+
+    bin			    kaggle		      opt		 sys
+    boot			    lib			      proc		 tmp
+    content			    lib32		      python-apt	 tools
+    cuda-keyring_1.1-1_all.deb  lib64		      python-apt.tar.xz  usr
+    datalab			    libx32		      root		 var
+    dev			    media		      run
+    etc			    mnt			      sbin
+    home			    NGC-DL-CONTAINER-LICENSE  srv
+    
+
+Мы видим стандартную структуру Linux! Мы находимся в виртуальной машине Google Colab — отдельном компьютере с Ubuntu и предустановленными библиотеками для Data Science.
+
+Обратите внимание на **`content`** — это наша рабочая папка в Colab.
+
+**Каждый запуск ноутбука = новая чистая виртуальная машина!**
+
+В последней команде мы зашли в корневую директорию и посмотрели там содержимое, но где мы сейчас?
+
+
+```python
+!pwd
+```
+
+    /content
+    
+
+Теперь давайте снова сделаем последние команды для просмотра содержимого в корневой директории, только с помощью **`%`**, а не **`!`**, чтобы понять разницу
+
+
+```python
+%cd ..
+```
+
+    /
+    
+
+
+```python
+%ls
+```
+
+    [0m[01;36mbin[0m@                        [01;36mlib32[0m@                    [01;34mroot[0m/
+    [01;34mboot[0m/                       [01;36mlib64[0m@                    [01;34mrun[0m/
+    [01;34mcontent[0m/                    [01;36mlibx32[0m@                   [01;36msbin[0m@
+    cuda-keyring_1.1-1_all.deb  [01;34mmedia[0m/                    [01;34msrv[0m/
+    [01;34mdatalab[0m/                    [01;34mmnt[0m/                      [01;34msys[0m/
+    [01;34mdev[0m/                        NGC-DL-CONTAINER-LICENSE  [30;42mtmp[0m/
+    [01;34metc[0m/                        [01;34mopt[0m/                      [01;34mtools[0m/
+    [01;34mhome[0m/                       [01;34mproc[0m/                     [01;34musr[0m/
+    [01;34mkaggle[0m/                     [01;34mpython-apt[0m/               [01;34mvar[0m/
+    [01;36mlib[0m@                        [01;32mpython-apt.tar.xz[0m*
+    
+
+С **`!`** отсутствовало сохранение нового состояния между ячейками, мы всегда оказывались в нашей рабочей директории **`content/`**, однако с **`%`** состояния между ячейками сохраняются
+
+Вернемся в нашу рабочую директорию и создадим в ней текстовый файл **`file.txt`** с некоторым содержимым
+
+
+```python
+%cd content
+```
+
+    /content
+    
+
+
+```python
+!echo "I love Python" > file.txt
+```
+
+Проверим, создался ли файл:
+
+
+```python
+!ls
+```
+
+    file.txt  sample_data
+    
+
+Выведем его содержимое
+
+
+```python
+!cat file.txt
+```
+
+    I love Python
+    
+
+Чтобы создать директорию, используем команду **`mkdir`**
+
+
+```python
+!mkdir first_directory
+```
+
+
+```python
+!ls
+```
+
+    file.txt  first_directory  sample_data
+    
+
+А теперь удалим эту папку:
+
+
+```python
+!rm -r first_directory
+```
+
+
+```python
+!ls
+```
+
+    file.txt  sample_data
+    
+
+### Задание для самостоятельного решения
+Создайте в **`content`** директорию **`my_project`**, в ней создайте файл **`README.md`**, в котором будет находится следующая строка "Это проект <Фамилия> <Имя>"
+
+Обязательные условия: используйте команду **`touch`**, затем добавьте туда нужную строку
+
+
+```python
+# для проверки
+!cat /content/my_project/README.md
+```
+
+    Это проект Павла Дурова
+    
+
+### Решение
+
+
+```python
+!mkdir my_project && cd my_project && touch README.md && echo "Это проект Павла Дурова" >> README.md
+```
+
+## 2. Обучение и сохранение модели
+
+### План
+
+Давайте обучим модель предсказания из **16 семинара по ML basics** и сохраним её в файл.
+
+### Зачем это делать?
+
+Чаще всего модель обучается **один раз** (иногда это занимает часы или дни), а используется **многократно**. Сохранение модели в файл позволяет не переобучать её каждый раз при запуске приложения.
+
+**Типичный сценарий выглядит так:**
+1. Модель обучается на мощном сервере или в облаке
+2. Сохраняется в файл
+3. Этот файл загружается в API или веб-приложение для выполнения предсказаний
+
+Для начала подготовим данные и создадим удобную функцию для подсчета метрик
+
+**Рекомендуется** сразу скинуть нижний код студентам, чтобы они шли в одном темпе
+
+
+```python
+
+```
+
+
+```python
+# Скачаем наш датасет
+! wget https://www.dropbox.com/s/ofr99e7skcd515m/telecom_churn.csv
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+# Считаем наш датасет при помощи библиотеки pandas
+data = pd.read_csv('telecom_churn.csv')
+
+X = data.drop(columns='Churn')
+y = data['Churn']
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.2, random_state=12)
+
+def make_scores(y_valid, preds_valid):
+    # Посчитаем метрики для нашего алгоритма
+    print(f'Accuracy  = {accuracy_score(y_valid, preds_valid)}')
+    print(f'Precision = {precision_score(y_valid, preds_valid)}')
+    print(f'Recall    = {recall_score(y_valid, preds_valid)}')
+```
+
+    --2025-12-06 15:07:40--  https://www.dropbox.com/s/ofr99e7skcd515m/telecom_churn.csv
+    Resolving www.dropbox.com (www.dropbox.com)... 162.125.3.18, 2620:100:6018:18::a27d:312
+    Connecting to www.dropbox.com (www.dropbox.com)|162.125.3.18|:443... connected.
+    HTTP request sent, awaiting response... 302 Found
+    Location: https://www.dropbox.com/scl/fi/t0vxmjim9sdzqhaw3g2qs/telecom_churn.csv?rlkey=qlwbfmma1vfo24b0j6025wc4h [following]
+    --2025-12-06 15:07:40--  https://www.dropbox.com/scl/fi/t0vxmjim9sdzqhaw3g2qs/telecom_churn.csv?rlkey=qlwbfmma1vfo24b0j6025wc4h
+    Reusing existing connection to www.dropbox.com:443.
+    HTTP request sent, awaiting response... 302 Found
+    Location: https://uc1ce3ee4baa2df78f15d98d3f15.dl.dropboxusercontent.com/cd/0/inline/C2iCrt8TuaZKH75HMEeuzHYJZ3XWmzK3nSJvpVYD6hNVzaEzTAGQ9tR_vhjrZ_byi7wsgpEnz4KJOFQVyeaoVn81-842wccDWoCyUGX7jgVbF5AomITYrJBEQNeQtGiwbvL75z-mrVBpfYKjQcAdOpip/file# [following]
+    --2025-12-06 15:07:40--  https://uc1ce3ee4baa2df78f15d98d3f15.dl.dropboxusercontent.com/cd/0/inline/C2iCrt8TuaZKH75HMEeuzHYJZ3XWmzK3nSJvpVYD6hNVzaEzTAGQ9tR_vhjrZ_byi7wsgpEnz4KJOFQVyeaoVn81-842wccDWoCyUGX7jgVbF5AomITYrJBEQNeQtGiwbvL75z-mrVBpfYKjQcAdOpip/file
+    Resolving uc1ce3ee4baa2df78f15d98d3f15.dl.dropboxusercontent.com (uc1ce3ee4baa2df78f15d98d3f15.dl.dropboxusercontent.com)... 162.125.80.15, 2620:100:6018:15::a27d:30f
+    Connecting to uc1ce3ee4baa2df78f15d98d3f15.dl.dropboxusercontent.com (uc1ce3ee4baa2df78f15d98d3f15.dl.dropboxusercontent.com)|162.125.80.15|:443... connected.
+    HTTP request sent, awaiting response... 200 OK
+    Length: 128828 (126K) [text/plain]
+    Saving to: ‘telecom_churn.csv.1’
+    
+    telecom_churn.csv.1 100%[===================>] 125.81K   324KB/s    in 0.4s    
+    
+    2025-12-06 15:07:41 (324 KB/s) - ‘telecom_churn.csv.1’ saved [128828/128828]
+    
+    
+
+**Вопрос**: где скорее всего сейчас лежит **`telecom_churn.csv`**? Какой командой проверим?
+
+
+```python
+# перенесем сразу telecom_churn.csv в репозиторий нашего проекта для дальнейшего удобства
+
+!mkdir /content/my_project/data && mv /content/telecom_churn.csv /content/my_project/data
+```
+
+Обучим первую модель
+
+
+```python
+knn_first = KNeighborsClassifier(n_neighbors=3)
+knn_first.fit(X_train, y_train)
+```
+
+
+
+
+<style>#sk-container-id-2 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: #000;
+  --sklearn-color-text-muted: #666;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-2 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-2 pre {
+  padding: 0;
+}
+
+#sk-container-id-2 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-2 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-2 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-2 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-2 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-2 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-2 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-2 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-2 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-2 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-2 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-2 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-2 label.sk-toggleable__label {
+  cursor: pointer;
+  display: flex;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#sk-container-id-2 label.sk-toggleable__label .caption {
+  font-size: 0.6rem;
+  font-weight: lighter;
+  color: var(--sklearn-color-text-muted);
+}
+
+#sk-container-id-2 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-2 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-2 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-2 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-2 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-2 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-2 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-2 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-2 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-2 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-2 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-2 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-2 div.sk-label label.sk-toggleable__label,
+#sk-container-id-2 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-2 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-2 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-2 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-2 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-2 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-2 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-2 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-2 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 0.5em;
+  text-align: center;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-2 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-2 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-2 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-2 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div id="sk-container-id-2" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>KNeighborsClassifier(n_neighbors=3)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-2" type="checkbox" checked><label for="sk-estimator-id-2" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>KNeighborsClassifier</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.neighbors.KNeighborsClassifier.html">?<span>Documentation for KNeighborsClassifier</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>KNeighborsClassifier(n_neighbors=3)</pre></div> </div></div></div></div>
+
+
+
+Теперь давайте сохраним обученную модель в [бинарный файл](https://blog.skillfactory.ru/glossary/binarnyy-fayl/), файл, содержащий данные в виде последовательности байтов (нулей и единиц), которые компьютер понимает напрямую. В отличие от **текстовых файлов** (`.txt`, `.csv`, `.json`), которые можно открыть и прочитать в обычном текстовом редакторе, бинарные файлы выглядят как набор нечитаемых символов.
+
+Примеры бинарных файлов: изображения (`.jpg`, `.png`), видео (`.mp4`), исполняемые программы (`.exe`), архивы (`.zip`) — и наши сохранённые модели (`.pkl`).
+
+**Преимущества бинарных файлов:**
+- Компактность (занимают меньше места)
+- Быстрая загрузка и запись
+- Сохраняют точную структуру объекта
+
+Существует стандартная библиотека [pickle](https://habr.com/ru/companies/otus/articles/888262/) для сохранения Python-объектов в бинарные файлы, давайте воспользуемся ею!
+
+
+```python
+!cd my_project && mkdir models # создадим директорию для хранения моделей
+```
+
+
+```python
+import pickle
+
+model_path = "/content/my_project/models/first_model.pkl" # куда кладем модель
+with open(model_path, 'wb') as f:  # 'wb' = write binary (запись в бинарном режиме)
+    pickle.dump(knn_first, f)
+
+```
+
+Скачаем нашу модель и протестируем ее
+
+
+```python
+with open(model_path, 'rb') as f:  # 'rb' = read binary (чтение в бинарном режиме)
+    loaded_model = pickle.load(f)
+
+
+preds_valid = loaded_model.predict(X_valid)
+make_scores(y_valid, preds_valid)
+```
+
+    Accuracy  = 0.881559220389805
+    Precision = 0.64
+    Recall    = 0.34408602150537637
+    
+
+### Задание для самостоятельного решения
+Обучите модель KNN на тех же данных с 5 ближайшими соседями и манхэттенской метрикой. Протестируйте ее и сохраните ее в **`/content/my_project/models/`**
+
+### Решение
+
+
+```python
+knn_second = KNeighborsClassifier(n_neighbors=5, metric='manhattan')
+knn_second.fit(X_train, y_train)
+preds_valid = knn_second.predict(X_valid)
+make_scores(y_valid, preds_valid)
+
+model_path = "/content/my_project/models/second_model.pkl" # куда кладем модель
+with open(model_path, 'wb') as f:  # 'wb' = write binary (запись в бинарном режиме)
+    pickle.dump(knn_second, f)
+```
+
+    Accuracy  = 0.8920539730134932
+    Precision = 0.7441860465116279
+    Recall    = 0.34408602150537637
+    
+
+### Для самых любознательных
+
+Помимо pickle существуют и другие форматы сохранения моделей. Один из наиболее универсальных — [**ONNX**](https://habr.com/ru/articles/757080/) (Open Neural Network Exchange).
+
+**ONNX** — это открытый формат для представления моделей машинного обучения (по названию можно понять, что в основном для нейросетей), который позволяет переносить модели между различными фреймворками и языками программирования. В отличие от pickle, который работает только с Python, ONNX-модели можно использовать в C++, Java, JavaScript и других языках.
+
+#### Для самых мазохистов
+
+Когда автор данной тетрадки собирал этот блок, он был вдохновлен своей первой в жизни стажировкой, одной из задач которой было правильно встроить в существующий pipeline системы модель из opensource, написанную по следующей [статье](https://arxiv.org/pdf/2507.16632), которая как раз [хранилась](https://huggingface.co/stepfun-ai/Step-Audio-Tokenizer/tree/main) в формате **ONNX** :)
+
+*Вникать во все ни в коем случае не надо, это просто для того, чтобы посмотреть, как примерно может выглядеть боевая R&D задача!*
+
+## 3. Модульная структура проекта
+
+### Почему нужна структура?
+
+В реальных проектах весь код организован в виде отдельных Python-модулей (`.py` файлов), а не хранится в одном ноутбуке как минимум по следующим причинам:
+
+**Масштабируемость:** когда проект растёт, один ноутбук с тысячами строк кода становится нечитаемым и неуправляемым. Разделение на модули позволяет логически структурировать код.
+
+**Переиспользование:** функции и классы из отдельных модулей можно импортировать в разные части проекта, в других ноутбуках или скриптах. Не нужно копировать один и тот же код.
+
+**Командная работа:** когда над проектом работает несколько человек, модульная структура позволяет разделить зоны ответственности — один занимается обработкой данных, другой моделью, третий оценкой результатов.
+
+**Тестирование:** отдельные модули легко покрыть unit-тестами, что критично для production-кода.
+
+---
+
+Эти принципы применимы к любому проекту — будь то backend-разработка, frontend, DevOps или что-то ещё. Но, как вы уже догадываетесь, данная семинарская тетрадка имитирует простой пример ML-проекта.
+
+Дальше мы создадим несколько модулей, которые будут отвечать за минимально необходимые вещи для работы pipeline:
+- **Обработка и подготовка данных** для модели
+- **Сама модель** (обучение, предсказание, сохранение/загрузка)
+- **Непосредственный запуск** тестирование и обучение
+
+
+примерный план (не забываем про typing):
+
+подготовка и обработка данных - одна функция, которая считывает данные по пути, разбивает их на train и test, затем прогоняется на какой то отдельной категории данных (по определенному срезу)
+
+написание модели - считывает путь к бинарнику, методы fit predict очевидно, и что нибудь необычное что не реализовано в стандартном пакете kkn из sklearn
+
+написание прогоночного скрипта, туда посылаем путь к модели, путь к данным на каких условиях хотим прогнаться если они есть
+
+#### Обработка и подготовка данных `data_preprocessing.py`
+
+Давайте создадим функцию, которая будет:
+- Считывать данные из файла по указанному пути
+- Делить данные на train и test выборки
+- Иметь опциональную возможность удалять определённые столбцы из данных
+
+**Зачем дополнительная опция?**
+
+В реальных экспериментах часто важно понять, какие признаки действительно влияют на качество модели. Возможность гибко исключать отдельные столбцы позволяет проводить **ablation study** — анализ того, как изменение набора признаков влияет на скор модели.
+
+
+```python
+data
+```
+
+
+
+
+
+  <div id="df-6fd41367-4ee5-4d31-9ee9-13180e8a2730" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Churn</th>
+      <th>AccountWeeks</th>
+      <th>ContractRenewal</th>
+      <th>DataPlan</th>
+      <th>DataUsage</th>
+      <th>CustServCalls</th>
+      <th>DayMins</th>
+      <th>DayCalls</th>
+      <th>MonthlyCharge</th>
+      <th>OverageFee</th>
+      <th>RoamMins</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>128</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2.70</td>
+      <td>1</td>
+      <td>265.1</td>
+      <td>110</td>
+      <td>89.0</td>
+      <td>9.87</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>107</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3.70</td>
+      <td>1</td>
+      <td>161.6</td>
+      <td>123</td>
+      <td>82.0</td>
+      <td>9.78</td>
+      <td>13.7</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>137</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0</td>
+      <td>243.4</td>
+      <td>114</td>
+      <td>52.0</td>
+      <td>6.06</td>
+      <td>12.2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>84</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>2</td>
+      <td>299.4</td>
+      <td>71</td>
+      <td>57.0</td>
+      <td>3.10</td>
+      <td>6.6</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>75</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>3</td>
+      <td>166.7</td>
+      <td>113</td>
+      <td>41.0</td>
+      <td>7.42</td>
+      <td>10.1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>3328</th>
+      <td>0</td>
+      <td>192</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2.67</td>
+      <td>2</td>
+      <td>156.2</td>
+      <td>77</td>
+      <td>71.7</td>
+      <td>10.78</td>
+      <td>9.9</td>
+    </tr>
+    <tr>
+      <th>3329</th>
+      <td>0</td>
+      <td>68</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.34</td>
+      <td>3</td>
+      <td>231.1</td>
+      <td>57</td>
+      <td>56.4</td>
+      <td>7.67</td>
+      <td>9.6</td>
+    </tr>
+    <tr>
+      <th>3330</th>
+      <td>0</td>
+      <td>28</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>2</td>
+      <td>180.8</td>
+      <td>109</td>
+      <td>56.0</td>
+      <td>14.44</td>
+      <td>14.1</td>
+    </tr>
+    <tr>
+      <th>3331</th>
+      <td>0</td>
+      <td>184</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>2</td>
+      <td>213.8</td>
+      <td>105</td>
+      <td>50.0</td>
+      <td>7.98</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>3332</th>
+      <td>0</td>
+      <td>74</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3.70</td>
+      <td>0</td>
+      <td>234.4</td>
+      <td>113</td>
+      <td>100.0</td>
+      <td>13.30</td>
+      <td>13.7</td>
+    </tr>
+  </tbody>
+</table>
+<p>3333 rows × 11 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-6fd41367-4ee5-4d31-9ee9-13180e8a2730')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-6fd41367-4ee5-4d31-9ee9-13180e8a2730 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-6fd41367-4ee5-4d31-9ee9-13180e8a2730');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+    <div id="df-e081212a-1f08-4275-8fc9-29c88d484f99">
+      <button class="colab-df-quickchart" onclick="quickchart('df-e081212a-1f08-4275-8fc9-29c88d484f99')"
+                title="Suggest charts"
+                style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+      </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+      <script>
+        async function quickchart(key) {
+          const quickchartButtonEl =
+            document.querySelector('#' + key + ' button');
+          quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+          quickchartButtonEl.classList.add('colab-df-spinner');
+          try {
+            const charts = await google.colab.kernel.invokeFunction(
+                'suggestCharts', [key], {});
+          } catch (error) {
+            console.error('Error during call to suggestCharts:', error);
+          }
+          quickchartButtonEl.classList.remove('colab-df-spinner');
+          quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+        }
+        (() => {
+          let quickchartButtonEl =
+            document.querySelector('#df-e081212a-1f08-4275-8fc9-29c88d484f99 button');
+          quickchartButtonEl.style.display =
+            google.colab.kernel.accessAllowed ? 'block' : 'none';
+        })();
+      </script>
+    </div>
+    </div>
+  </div>
+
+
+
+
+
+```python
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from typing import List, Tuple, Optional
+
+def load_and_split_data(
+    path_to_data: str,
+    test_size: float = 0.2,
+    columns_to_drop: Optional[List[str]] = None,
+    target_column: str = "Churn",
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    data = pd.read_csv(path_to_data)
+
+    # Проверяем, что целевая переменная не в списке удаляемых столбцов
+    if columns_to_drop and target_column in columns_to_drop:
+        raise ValueError(f"Целевая переменная '{target_column}' не может быть удалена!")
+
+    if columns_to_drop:
+        data = data.drop(columns=columns_to_drop)
+
+    X = data.drop(columns=[target_column])
+    y = data[target_column]
+
+    # Делим на train/test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size)
+
+    return X_train, X_test, y_train, y_test
+
+```
+
+
+```python
+# проверим, что все ок
+X_train, X_test, y_train, y_test = load_and_split_data("/content/my_project/data/telecom_churn.csv", 15, ['ContractRenewal',	'DataPlan'])
+```
+
+
+```python
+X_train
+```
+
+
+
+
+
+  <div id="df-8633fac9-e44f-4e28-9f67-d17d365a2799" class="colab-df-container">
+    <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>AccountWeeks</th>
+      <th>DataUsage</th>
+      <th>CustServCalls</th>
+      <th>DayMins</th>
+      <th>DayCalls</th>
+      <th>MonthlyCharge</th>
+      <th>OverageFee</th>
+      <th>RoamMins</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2811</th>
+      <td>62</td>
+      <td>0.00</td>
+      <td>2</td>
+      <td>189.5</td>
+      <td>122</td>
+      <td>42.0</td>
+      <td>5.19</td>
+      <td>10.8</td>
+    </tr>
+    <tr>
+      <th>2573</th>
+      <td>124</td>
+      <td>0.00</td>
+      <td>1</td>
+      <td>312.0</td>
+      <td>112</td>
+      <td>69.0</td>
+      <td>9.00</td>
+      <td>12.8</td>
+    </tr>
+    <tr>
+      <th>3268</th>
+      <td>84</td>
+      <td>0.00</td>
+      <td>2</td>
+      <td>289.1</td>
+      <td>100</td>
+      <td>70.0</td>
+      <td>11.69</td>
+      <td>12.7</td>
+    </tr>
+    <tr>
+      <th>667</th>
+      <td>27</td>
+      <td>0.00</td>
+      <td>0</td>
+      <td>193.8</td>
+      <td>102</td>
+      <td>44.0</td>
+      <td>5.95</td>
+      <td>9.2</td>
+    </tr>
+    <tr>
+      <th>2239</th>
+      <td>22</td>
+      <td>0.00</td>
+      <td>2</td>
+      <td>181.8</td>
+      <td>108</td>
+      <td>48.0</td>
+      <td>9.93</td>
+      <td>9.3</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2152</th>
+      <td>155</td>
+      <td>3.00</td>
+      <td>1</td>
+      <td>211.7</td>
+      <td>121</td>
+      <td>78.0</td>
+      <td>6.96</td>
+      <td>11.1</td>
+    </tr>
+    <tr>
+      <th>3167</th>
+      <td>152</td>
+      <td>0.00</td>
+      <td>1</td>
+      <td>228.1</td>
+      <td>93</td>
+      <td>51.0</td>
+      <td>6.82</td>
+      <td>9.0</td>
+    </tr>
+    <tr>
+      <th>159</th>
+      <td>115</td>
+      <td>2.59</td>
+      <td>1</td>
+      <td>142.1</td>
+      <td>124</td>
+      <td>65.9</td>
+      <td>9.17</td>
+      <td>9.6</td>
+    </tr>
+    <tr>
+      <th>795</th>
+      <td>92</td>
+      <td>0.00</td>
+      <td>1</td>
+      <td>197.0</td>
+      <td>84</td>
+      <td>57.0</td>
+      <td>13.47</td>
+      <td>10.8</td>
+    </tr>
+    <tr>
+      <th>1592</th>
+      <td>30</td>
+      <td>0.00</td>
+      <td>3</td>
+      <td>137.6</td>
+      <td>108</td>
+      <td>38.0</td>
+      <td>8.10</td>
+      <td>5.8</td>
+    </tr>
+  </tbody>
+</table>
+<p>3318 rows × 8 columns</p>
+</div>
+    <div class="colab-df-buttons">
+
+  <div class="colab-df-container">
+    <button class="colab-df-convert" onclick="convertToInteractive('df-8633fac9-e44f-4e28-9f67-d17d365a2799')"
+            title="Convert this dataframe to an interactive table."
+            style="display:none;">
+
+  <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960">
+    <path d="M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z"/>
+  </svg>
+    </button>
+
+  <style>
+    .colab-df-container {
+      display:flex;
+      gap: 12px;
+    }
+
+    .colab-df-convert {
+      background-color: #E8F0FE;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      fill: #1967D2;
+      height: 32px;
+      padding: 0 0 0 0;
+      width: 32px;
+    }
+
+    .colab-df-convert:hover {
+      background-color: #E2EBFA;
+      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+      fill: #174EA6;
+    }
+
+    .colab-df-buttons div {
+      margin-bottom: 4px;
+    }
+
+    [theme=dark] .colab-df-convert {
+      background-color: #3B4455;
+      fill: #D2E3FC;
+    }
+
+    [theme=dark] .colab-df-convert:hover {
+      background-color: #434B5C;
+      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+      fill: #FFFFFF;
+    }
+  </style>
+
+    <script>
+      const buttonEl =
+        document.querySelector('#df-8633fac9-e44f-4e28-9f67-d17d365a2799 button.colab-df-convert');
+      buttonEl.style.display =
+        google.colab.kernel.accessAllowed ? 'block' : 'none';
+
+      async function convertToInteractive(key) {
+        const element = document.querySelector('#df-8633fac9-e44f-4e28-9f67-d17d365a2799');
+        const dataTable =
+          await google.colab.kernel.invokeFunction('convertToInteractive',
+                                                    [key], {});
+        if (!dataTable) return;
+
+        const docLinkHtml = 'Like what you see? Visit the ' +
+          '<a target="_blank" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'
+          + ' to learn more about interactive tables.';
+        element.innerHTML = '';
+        dataTable['output_type'] = 'display_data';
+        await google.colab.output.renderOutput(dataTable, element);
+        const docLink = document.createElement('div');
+        docLink.innerHTML = docLinkHtml;
+        element.appendChild(docLink);
+      }
+    </script>
+  </div>
+
+
+    <div id="df-ed080cae-0e1c-4eb3-badd-19058a48f62b">
+      <button class="colab-df-quickchart" onclick="quickchart('df-ed080cae-0e1c-4eb3-badd-19058a48f62b')"
+                title="Suggest charts"
+                style="display:none;">
+
+<svg xmlns="http://www.w3.org/2000/svg" height="24px"viewBox="0 0 24 24"
+     width="24px">
+    <g>
+        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+    </g>
+</svg>
+      </button>
+
+<style>
+  .colab-df-quickchart {
+      --bg-color: #E8F0FE;
+      --fill-color: #1967D2;
+      --hover-bg-color: #E2EBFA;
+      --hover-fill-color: #174EA6;
+      --disabled-fill-color: #AAA;
+      --disabled-bg-color: #DDD;
+  }
+
+  [theme=dark] .colab-df-quickchart {
+      --bg-color: #3B4455;
+      --fill-color: #D2E3FC;
+      --hover-bg-color: #434B5C;
+      --hover-fill-color: #FFFFFF;
+      --disabled-bg-color: #3B4455;
+      --disabled-fill-color: #666;
+  }
+
+  .colab-df-quickchart {
+    background-color: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    fill: var(--fill-color);
+    height: 32px;
+    padding: 0;
+    width: 32px;
+  }
+
+  .colab-df-quickchart:hover {
+    background-color: var(--hover-bg-color);
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    fill: var(--button-hover-fill-color);
+  }
+
+  .colab-df-quickchart-complete:disabled,
+  .colab-df-quickchart-complete:disabled:hover {
+    background-color: var(--disabled-bg-color);
+    fill: var(--disabled-fill-color);
+    box-shadow: none;
+  }
+
+  .colab-df-spinner {
+    border: 2px solid var(--fill-color);
+    border-color: transparent;
+    border-bottom-color: var(--fill-color);
+    animation:
+      spin 1s steps(1) infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+      border-left-color: var(--fill-color);
+    }
+    20% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    30% {
+      border-color: transparent;
+      border-left-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+      border-right-color: var(--fill-color);
+    }
+    40% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-top-color: var(--fill-color);
+    }
+    60% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+    }
+    80% {
+      border-color: transparent;
+      border-right-color: var(--fill-color);
+      border-bottom-color: var(--fill-color);
+    }
+    90% {
+      border-color: transparent;
+      border-bottom-color: var(--fill-color);
+    }
+  }
+</style>
+
+      <script>
+        async function quickchart(key) {
+          const quickchartButtonEl =
+            document.querySelector('#' + key + ' button');
+          quickchartButtonEl.disabled = true;  // To prevent multiple clicks.
+          quickchartButtonEl.classList.add('colab-df-spinner');
+          try {
+            const charts = await google.colab.kernel.invokeFunction(
+                'suggestCharts', [key], {});
+          } catch (error) {
+            console.error('Error during call to suggestCharts:', error);
+          }
+          quickchartButtonEl.classList.remove('colab-df-spinner');
+          quickchartButtonEl.classList.add('colab-df-quickchart-complete');
+        }
+        (() => {
+          let quickchartButtonEl =
+            document.querySelector('#df-ed080cae-0e1c-4eb3-badd-19058a48f62b button');
+          quickchartButtonEl.style.display =
+            google.colab.kernel.accessAllowed ? 'block' : 'none';
+        })();
+      </script>
+    </div>
+    </div>
+  </div>
+
+
+
+
+##### Вопрос
+
+Зачем мы использовали typing?
+
+Мы убедились, что новая функция работает, теперь загрузим ее в проект через magic-команду **`%%writefile`**
+
+
+```python
+%%writefile my_project/data_processing.py
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from typing import List, Tuple, Optional
+
+def load_and_split_data(
+    path_to_data: str,
+    test_size: float = 0.2,
+    columns_to_drop: Optional[List[str]] = None,
+    target_column: str = "Churn",
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    data = pd.read_csv(path_to_data)
+
+    # Проверяем, что целевая переменная не в списке удаляемых столбцов
+    if columns_to_drop and target_column in columns_to_drop:
+        raise ValueError(f"Целевая переменная '{target_column}' не может быть удалена!")
+
+    if columns_to_drop:
+        data = data.drop(columns=columns_to_drop)
+
+    X = data.drop(columns=[target_column])
+    y = data[target_column]
+
+    # Делим на train/test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size)
+
+    return X_train, X_test, y_train, y_test
+```
+
+    Writing my_project/data_processing.py
+    
+
+#### Модель `model.py`
+
+Теперь давайте создадим класс `Classifier`, который будет оборачивать нашу модель и предоставлять удобный интерфейс для работы с ней.
+
+Класс будет уметь:
+- **Инициализироваться** через переданный путь к сохранённому бинарному файлу модели
+- **Обучаться** на переданных данных
+- **Делать предсказания** на новых данных
+- **Возвращать уверенность модели** — метод, который вычисляет среднюю вероятность предсказанного класса (этот метод напрямую не доступен у KNN из sklearn, нужно дополнительно обработать результат `predict_proba`)
+
+Метод с уверенностью — это банальный пример того, что может понадобиться для бизнес-логики компании. Например, компания может хотеть показывать предсказания пользователю только если модель уверена больше чем на 80%, или отправлять неуверенные случаи на ручную проверку аналитикам. Именно поэтому и существуют такие интерфейсы-обёртки — через них мы добавляем кастомные методы и адаптируем модель под конкретные бизнес-требования.
+
+
+```python
+class Classifier:
+    """
+    Обёртка для модели классификации
+    """
+
+    def __init__(self, model_path):
+        """
+        Инициализация классификатора
+
+        Args:
+            model_path: путь к сохранённой модели
+        """
+        self.load_model(model_path)
+
+
+    def train(self, X_train, y_train):
+        """
+        Обучение модели
+
+        Args:
+            X_train: признаки для обучения
+            y_train: целевая переменная
+        """
+        self.model.fit(X_train, y_train)
+
+
+    def predict(self, X):
+        """
+        Предсказание классов
+
+        Args:
+            X: данные для предсказания
+
+        Returns:
+            Предсказанные классы
+        """
+        return self.model.predict(X)
+
+
+    def get_prediction_confidence(self, X):
+        """
+        Вычисляет среднюю уверенность модели в предсказаниях
+
+        Args:
+            X: данные для предсказания
+
+        Returns:
+            Средняя уверенность (0-1)
+        """
+        probabilities = self.model.predict_proba(X)
+        predictions = self.predict(X)
+
+        # Берём вероятности предсказанных классов
+        confidence_scores = []
+        for i, pred in enumerate(predictions):
+            confidence_scores.append(probabilities[i][pred])
+
+        return np.mean(confidence_scores)
+
+    def save_model(self, path: str):
+        """
+        Сохранение модели в файл
+
+        Args:
+            path: путь для сохранения
+        """
+        with open(path, 'wb') as f:
+            pickle.dump(self.model, f)
+
+
+    def load_model(self, path: str):
+        """
+        Загрузка модели из файла
+
+        Args:
+            path: путь к файлу модели
+        """
+        with open(path, 'rb') as f:
+            self.model = pickle.load(f)
+```
+
+
+```python
+# опять же перед загрузкой в проект проверим работу нового класса, но воспользовавшись уже функцией по обработке данных из проекта!
+
+from my_project.data_processing import load_and_split_data
+
+
+X_train, X_test, y_train, y_test = load_and_split_data("/content/my_project/data/telecom_churn.csv", 15)
+
+classifier = Classifier("/content/my_project/models/second_model.pkl")
+
+classifier.get_prediction_confidence(X_test)
+```
+
+
+
+
+    np.float64(0.9466666666666668)
+
+
+
+
+```python
+%%writefile my_project/model.py
+import pickle
+import numpy as np
+
+class Classifier:
+    """
+    Обёртка для модели классификации
+    """
+
+    def __init__(self, model_path):
+        """
+        Инициализация классификатора
+
+        Args:
+            model_path: путь к сохранённой модели
+        """
+        self.load_model(model_path)
+
+
+    def train(self, X_train, y_train):
+        """
+        Обучение модели
+
+        Args:
+            X_train: признаки для обучения
+            y_train: целевая переменная
+        """
+        self.model.fit(X_train, y_train)
+
+
+    def predict(self, X):
+        """
+        Предсказание классов
+
+        Args:
+            X: данные для предсказания
+
+        Returns:
+            Предсказанные классы
+        """
+        return self.model.predict(X)
+
+
+    def get_prediction_confidence(self, X):
+        """
+        Вычисляет среднюю уверенность модели в предсказаниях
+
+        Args:
+            X: данные для предсказания
+
+        Returns:
+            Средняя уверенность (0-1)
+        """
+        probabilities = self.model.predict_proba(X)
+        predictions = self.predict(X)
+
+        # Берём вероятности предсказанных классов
+        confidence_scores = []
+        for i, pred in enumerate(predictions):
+            confidence_scores.append(probabilities[i][pred])
+
+        return np.mean(confidence_scores)
+
+    def save_model(self, path: str):
+        """
+        Сохранение модели в файл
+
+        Args:
+            path: путь для сохранения
+        """
+        with open(path, 'wb') as f:
+            pickle.dump(self.model, f)
+
+
+    def load_model(self, path: str):
+        """
+        Загрузка модели из файла
+
+        Args:
+            path: путь к файлу модели
+        """
+        with open(path, 'rb') as f:
+            self.model = pickle.load(f)
+```
+
+    Overwriting my_project/model.py
+    
+
+#### Запуск `eval.py`
+
+И наконец, давайте создадим скрипт `eval.py` — **точку входа** в наш проект.
+
+Это скрипт, который запускается **напрямую из командной строки** операционной системы и оркестрирует весь процесс: подготовку данных, обучение модели, оценку результатов.
+
+Для того чтобы скрипт мог принимать параметры из командной строки (пути к файлам, настройки модели и т.д.), используется модуль `argparse` из стандартной библиотеки Python.
+
+
+```python
+%%writefile my_project/eval.py
+import argparse
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+
+from data_processing import load_and_split_data
+from model import Classifier
+
+
+def main():
+    # Парсинг аргументов командной строки
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--data_path'
+    )
+
+    parser.add_argument(
+        '--model_path'
+    )
+
+    parser.add_argument(
+        '--test_size'
+    )
+
+
+    args = parser.parse_args()
+
+
+    X_train, X_test, y_train, y_test = load_and_split_data(
+        path_to_data=args.data_path,
+        test_size=args.test_size
+    )
+
+
+    classifier = Classifier(args.model_path)
+
+
+    y_pred = classifier.predict(X_test)
+
+
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+
+
+    print("РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ МОДЕЛИ")
+    print(f"Accuracy: {accuracy}")
+    print(f"Precision: {precision}")
+    print(f"Recall: {recall}")
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+    Overwriting my_project/eval.py
+    
+
+Давайте специально удалим `scikit-learn` и попробуем запустить наш скрипт, чтобы увидеть, что произойдёт:
+
+
+```python
+!pip uninstall scikit-learn
+```
+
+    Found existing installation: scikit-learn 1.6.1
+    Uninstalling scikit-learn-1.6.1:
+      Successfully uninstalled scikit-learn-1.6.1
+    
+
+
+```python
+!python /content/my_project/eval.py --data_path /content/my_project/data/telecom_churn.csv --model_path /content/my_project/models/second_model.pkl
+```
+
+    Traceback (most recent call last):
+      File "/content/my_project/eval.py", line 2, in <module>
+        from sklearn.metrics import accuracy_score, precision_score, recall_score
+    ModuleNotFoundError: No module named 'sklearn'
+    
+
+## 4. Проблема зависимостей и роль Docker
+
+Логично, ведь мы только что удалили этот модуль!
+
+### Что произошло?
+
+Мы удалили библиотеку `scikit-learn`, и скрипт перестал работать. Это иллюстрирует реальную проблему в разработке.
+
+### Типичная ситуация
+
+Вы клонируете репозиторий с GitHub или копируете чей-то код к себе на компьютер, в котором написано множество импортов...
+
+Но все эти импорты — это **внешние** библиотеки (зависимости проекта), и нет никакой гарантии, что они уже установлены на вашем компьютере
+
+---
+
+### В Jupyter-тетрадке мы привыкли решать это так:
+
+1. Запустили ячейку
+2. Получили ошибку импорта
+3. Выполнили `!pip install pandas`
+4. Перезапустили ячейку
+5. Работает!
+
+### Но в production-окружении так делать нельзя:
+
+- Нельзя вручную устанавливать библиотеки на сервере каждый раз
+- Нужна гарантия, что окружение **одинаковое везде**
+- Приложение должно запускаться **автоматически** без ручного вмешательства
+
+---
+
+### Как Docker решает эту проблему?
+
+**Docker** при сборке контейнера делает примерно следующее:
+
+1. Берёт чистую операционную систему (базовый образ)
+2. Читает файл `requirements.txt` — список всех необходимых библиотек
+3. **Автоматически устанавливает все зависимости**: `pip install -r requirements.txt`
+4. Копирует ваш код в контейнер
+5. Запускает приложение
+
+### Таким образом гарантируется, что:
+
+У всех одинаковое окружение (у вас, на сервере, у коллег)  
+Все зависимости установлены **до** запуска кода  
+Не нужно ничего устанавливать вручную
+
+
+
+Давайте сымитируем одну из ключевых операций Docker — установим все зависимости проекта из файла `requirements.txt` перед запуском.
+
+
+```python
+%%writefile /content/my_project/requirements.txt
+pandas
+scikit-learn
+numpy
+pytest
+```
+
+    Overwriting /content/my_project/requirements.txt
+    
+
+
+```python
+!pip install -r /content/my_project/requirements.txt
+```
+
+    Requirement already satisfied: pandas in /usr/local/lib/python3.12/dist-packages (from -r /content/my_project/requirements.txt (line 1)) (2.2.2)
+    Collecting scikit-learn (from -r /content/my_project/requirements.txt (line 2))
+      Using cached scikit_learn-1.7.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+    Requirement already satisfied: numpy in /usr/local/lib/python3.12/dist-packages (from -r /content/my_project/requirements.txt (line 3)) (2.0.2)
+    Requirement already satisfied: pytest in /usr/local/lib/python3.12/dist-packages (from -r /content/my_project/requirements.txt (line 4)) (8.4.2)
+    Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.12/dist-packages (from pandas->-r /content/my_project/requirements.txt (line 1)) (2.9.0.post0)
+    Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.12/dist-packages (from pandas->-r /content/my_project/requirements.txt (line 1)) (2025.2)
+    Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.12/dist-packages (from pandas->-r /content/my_project/requirements.txt (line 1)) (2025.2)
+    Requirement already satisfied: scipy>=1.8.0 in /usr/local/lib/python3.12/dist-packages (from scikit-learn->-r /content/my_project/requirements.txt (line 2)) (1.16.3)
+    Requirement already satisfied: joblib>=1.2.0 in /usr/local/lib/python3.12/dist-packages (from scikit-learn->-r /content/my_project/requirements.txt (line 2)) (1.5.2)
+    Requirement already satisfied: threadpoolctl>=3.1.0 in /usr/local/lib/python3.12/dist-packages (from scikit-learn->-r /content/my_project/requirements.txt (line 2)) (3.6.0)
+    Requirement already satisfied: iniconfig>=1 in /usr/local/lib/python3.12/dist-packages (from pytest->-r /content/my_project/requirements.txt (line 4)) (2.3.0)
+    Requirement already satisfied: packaging>=20 in /usr/local/lib/python3.12/dist-packages (from pytest->-r /content/my_project/requirements.txt (line 4)) (25.0)
+    Requirement already satisfied: pluggy<2,>=1.5 in /usr/local/lib/python3.12/dist-packages (from pytest->-r /content/my_project/requirements.txt (line 4)) (1.6.0)
+    Requirement already satisfied: pygments>=2.7.2 in /usr/local/lib/python3.12/dist-packages (from pytest->-r /content/my_project/requirements.txt (line 4)) (2.19.2)
+    Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.12/dist-packages (from python-dateutil>=2.8.2->pandas->-r /content/my_project/requirements.txt (line 1)) (1.17.0)
+    Using cached scikit_learn-1.7.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.5 MB)
+    Installing collected packages: scikit-learn
+    Successfully installed scikit-learn-1.7.2
+    
+
+Наконец, запустим наш скрипт, чтобы проверить скачанную модель на тестовых данных и получить метрики
+
+
+```python
+!python /content/my_project/eval.py --data_path /content/my_project/data/telecom_churn.csv --model_path /content/my_project/models/second_model.pkl
+```
+
+    Traceback (most recent call last):
+      File "/content/my_project/eval.py", line 2, in <module>
+        from sklearn.metrics import accuracy_score, precision_score, recall_score
+    ModuleNotFoundError: No module named 'sklearn'
+    
+
+## 5. Тестирование кода
+
+Когда речь идет о production-коде, тестирование становится критически важным. Тесты помогают:
+
+- **Убедиться, что код работает правильно** — функции делают то, что должны
+- **Предотвратить регрессии** — новые изменения не ломают существующий функционал
+- **Документировать поведение** — тесты показывают, как должен работать код
+- **Ускорить разработку** — можно быстро проверить, что всё работает после изменений
+- **Повысить уверенность при деплое** — если тесты прошли, код готов к production
+
+
+
+**[pytest](https://habr.com/ru/companies/beget/articles/948806/)** — самый популярный фреймворк для тестирования в Python. Он позволяет писать простые и понятные тесты.
+
+Напишем пару примеров тестов для Classifier из `model.py`. Проверим, что он выдает предсказания с совпадающей размерностью обучающих данных по количеству семплов, а также что уверенность лежит в диапозоне (0; 1)
+
+
+```python
+%%writefile /content/my_project/test_classifier.py
+
+import pytest
+import numpy as np
+import pandas as pd
+from model import Classifier
+
+from data_processing import load_and_split_data
+
+
+# Фикстура: подготавливаем данные для всех тестов
+@pytest.fixture
+def give_data():
+    X_train, X_test, y_train, y_test = load_and_split_data("/content/my_project/data/telecom_churn.csv", 15)
+
+    return (X_test, y_test)
+
+@pytest.fixture
+def give_model():
+    model = Classifier("/content/my_project/models/second_model.pkl")
+
+    return model
+
+
+
+def test_preds(give_model, give_data):
+    X, y = give_data
+    preds = give_model.predict(X)
+
+
+    assert preds.shape[0] == X.shape[0]
+    assert all(pred in [0, 1] for pred in preds)
+
+
+def test_conf(give_model, give_data):
+
+    X, y = give_data
+    conf = give_model.get_prediction_confidence(X)
+
+    assert (0 <= conf <= 1)
+
+
+
+```
+
+    Overwriting /content/my_project/test_classifier.py
+    
+
+
+```python
+!pytest /content/my_project/test_classifier.py
+```
+
+    [1m============================= test session starts ==============================[0m
+    platform linux -- Python 3.12.12, pytest-8.4.2, pluggy-1.6.0
+    rootdir: /content
+    plugins: langsmith-0.4.47, anyio-4.11.0, typeguard-4.4.4
+    collected 2 items                                                              [0m
+    
+    my_project/test_classifier.py [32m.[0m[32m.[0m[33m                                         [100%][0m
+    
+    [33m=============================== warnings summary ===============================[0m
+    my_project/test_classifier.py::test_preds
+    my_project/test_classifier.py::test_conf
+      /usr/local/lib/python3.12/dist-packages/sklearn/base.py:442: InconsistentVersionWarning: Trying to unpickle estimator KNeighborsClassifier from version 1.6.1 when using version 1.7.2. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+      https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+        warnings.warn(
+    
+    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+    [33m======================== [32m2 passed[0m, [33m[1m2 warnings[0m[33m in 1.98s[0m[33m =========================[0m
+    
+
+### Задание
+
+Давайте реализуем какой-нибудь свой мини-проект.
+Важно: все должно работать через файлы .py, а запускаться с помощью командной строки
+
+
+```python
+
+```
