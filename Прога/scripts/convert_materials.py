@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Конвертация материалов из «Оригиналы материалов» в «Материалы по ИАДу»:
+Конвертация материалов из «01_Оригиналы материалов» в текстовые выгрузки:
   - *.ipynb → .txt (Markdown через nbconvert)
   - *.pdf   → .txt (текст страниц через PyMuPDF)
 
-Запуск: python convert_materials.py
+Имя файла определяет папку назначения: «Seminar…» → «03_Материалы по питону»,
+«Sem …» (семинары ИАД) → «02_Материалы по ИАДу».
+
+Запуск из каталога `Прога/`: python scripts/convert_materials.py
 Опции:  --pdf-only   только PDF
         --ipynb-only только ноутбуки
 """
@@ -13,9 +16,18 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "Оригиналы материалов"
-DST = ROOT / "Материалы по ИАДу"
+# Корень зоны «Прога/» (скрипт лежит в scripts/)
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "01_Оригиналы материалов"
+DST_IAD = ROOT / "02_Материалы по ИАДу"
+DST_PYTHON = ROOT / "03_Материалы по питону"
+
+
+def output_dir_for_stem(stem: str) -> Path:
+    """Seminar* → питон, Sem * → ИАД."""
+    if stem.startswith("Seminar"):
+        return DST_PYTHON
+    return DST_IAD
 
 
 def convert_ipynb() -> tuple[int, int]:
@@ -29,7 +41,9 @@ def convert_ipynb() -> tuple[int, int]:
             nb = nbformat.read(ipynb, as_version=4)
             body, _ = exporter.from_notebook_node(nb)
             header = f"Источник: {ipynb.name}\n\n---\n\n"
-            out_path = DST / f"{ipynb.stem}.txt"
+            out_dir = output_dir_for_stem(ipynb.stem)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_path = out_dir / f"{ipynb.stem}.txt"
             out_path.write_text(header + body, encoding="utf-8")
             print("OK ipynb:", ipynb.name)
             ok += 1
@@ -67,7 +81,9 @@ def convert_pdf() -> tuple[int, int]:
                 f"Источник: {pdf.name}\n"
                 f"Формат: извлечение текста (PyMuPDF), без OCR.\n\n---\n\n"
             )
-            out_path = DST / f"{pdf.stem}.txt"
+            out_dir = output_dir_for_stem(pdf.stem)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_path = out_dir / f"{pdf.stem}.txt"
             out_path.write_text(header + body, encoding="utf-8")
             print("OK pdf:", pdf.name)
             ok += 1
@@ -87,7 +103,8 @@ def main() -> None:
         print("Нет папки:", SRC)
         return
 
-    DST.mkdir(parents=True, exist_ok=True)
+    DST_IAD.mkdir(parents=True, exist_ok=True)
+    DST_PYTHON.mkdir(parents=True, exist_ok=True)
 
     total_ok = total_fail = 0
     if not args.pdf_only:
